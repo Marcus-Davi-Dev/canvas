@@ -1,0 +1,308 @@
+:root {
+    --aside-width: 109.781px;
+}
+
+:root.dark {
+    --body-background-color: #3f3f3f;
+    --primary-background-color: #222;
+    --darker-border-color: #0f0f0f;
+    --border-color: gray;
+    --primary-font-color: white;
+    --selected-section-background-color: 255, 255, 255;
+    --svg-color: #acacac;
+}
+
+:root.light {
+    --body-background-color: #f3f3f3;
+    --primary-background-color: #dfdfdf;
+    --darker-border-color: black;
+    --border-color: #222;
+    --primary-font-color: black;
+    --selected-section-background-color: 100, 100, 100;
+    --svg-color: #909090;
+}
+
+* {
+    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: scroll;
+}
+
+body {
+    background-color: var(--body-background-color);
+    color: var(--primary-font-color);
+}
+
+body>.wrraper {
+    display: flex;
+    height: 90%;
+}
+
+body>.wrraper aside {
+    border-right: 2px black solid;
+    transition: all .5s;
+    overflow: hidden;
+    min-width: var(--aside-width);
+    background-color: var(--primary-background-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+body>.wrraper aside ul {
+    list-style: none;
+    padding: 0 12px 0 10px;
+}
+
+body>.wrraper aside ul>li {
+    padding: 2.5px 0 2.5px 2px;
+}
+
+body>.wrraper aside ul>li[aria-selected='true'] {
+    background-color: rgba(var(--selected-section-background-color), 0.3);
+    border-radius: 5px;
+}
+
+body>.wrraper aside ul>li>span.secao-contador-desenhos:not(.hidden) {
+    display: inline-block;
+    width: 19px;
+    height: 19px;
+    background-color: gold;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 999px;
+}
+
+body>.wrraper aside button,
+body>.wrraper main button:has(svg),
+div[popover] button,
+header button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: inherit;
+    padding: 0;
+}
+
+body>.wrraper main button:has(svg) {
+    height: 17.9px;
+}
+
+body>.wrraper aside>div[data-config-btn-parent] {
+    font-size: 12px;
+    margin-bottom: 4px;
+    place-items: center;
+}
+
+#menu-configuracao:not(.hidden) {
+    display: flex;
+    flex-direction: column;
+}
+
+.bloco-configuracao {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.bloco-configuracao input[type="checkbox"] {
+    width: 15px;
+}
+
+.bloco-configuracao .nome {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.bloco-configuracao .descricao {
+    font-size: 12px;
+}
+
+main {
+    flex-grow: 1;
+    overflow: scroll;
+    transition: filter .3s;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10%;
+    padding: 7px;
+    border-bottom: 1px var(--border-color) solid;
+    background-color: var(--primary-background-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 7px;
+}
+
+header form {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+header form input {
+    width: 100%;
+}
+
+header .entity {
+    line-height: 0.8;
+    font-size: 52px;
+}
+
+#novo-desenho {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    background-color: var(--primary-background-color);
+    height: 48px;
+    width: 48px;
+    padding: 8px;
+    border-radius: 100%;
+    color: var(--primary-font-color);
+    text-align: center;
+    font-size: 28px;
+}
+
+#desenhos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    padding-top: 7px;
+}
+
+#desenhos>.desenho {
+    /* anotações: para dispositivo móvel p, m e g */
+    width: 40%;
+    height: max-content;
+    /* fim das anotações */
+    border: 3px var(--darker-border-color) solid;
+    border-radius: 7px;
+    display: flex;
+    flex-direction: column;
+}
+
+#desenhos>.desenho>img {
+    border-radius: 6px 6px 0 0;
+    max-height: 73px;
+}
+
+.info {
+    display: flex;
+    justify-content: space-between;
+}
+
+.info .opcoes {
+    display: flex;
+    width: max-content;
+}
+
+svg {
+    color: var(--svg-color);
+}
+
+.hidden {
+    display: none;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+div[popover] {
+    background-color: var(--primary-background-color);
+    border: none;
+    color: var(--primary-font-color);
+}
+
+div[popover]:popover-open {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+dialog {
+    padding: 14px;
+    border-radius: 7px;
+    background-color: var(--primary-background-color);
+    color: var(--primary-font-color);
+    border: none;
+    box-shadow: 0px 0px 20px 3px black;
+    width: 320px;
+}
+
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+dialog input {
+    width: 100%;
+}
+
+dialog button {
+    border: none;
+    border-radius: 99px;
+    padding: 2px 6px;
+    margin: 4px;
+    font-weight: bold;
+    color: var(--primary-font-color);
+}
+
+dialog button:first-of-type {
+    background-color: red;
+}
+
+dialog button:last-of-type {
+    background-color: green;
+}
+
+@media screen and (max-width: 400px) {
+    body>.wrraper aside {
+        position: absolute;
+        z-index: 1;
+        left: 0;
+        bottom: 0;
+        height: 90%;
+    }
+}
+
+@media screen and (prefers-color-scheme: dark) {
+    :root {
+        --aside-width: 109.781px;
+        --body-background-color: #3f3f3f;
+        --primary-background-color: #222;
+        --darker-border-color: #0f0f0f;
+        --border-color: gray;
+        --primary-font-color: white;
+        --selected-section-background-color: 255, 255, 255;
+        --svg-color: #acacac;
+    }
+}
+
+@media screen and (prefers-color-scheme: light) {
+    :root {
+        --body-background-color: #f3f3f3;
+        --primary-background-color: #dfdfdf;
+        --darker-border-color: black;
+        --border-color: #222;
+        --primary-font-color: black;
+        --selected-section-background-color: 100, 100, 100;
+        --svg-color: #909090;
+    }
+}
