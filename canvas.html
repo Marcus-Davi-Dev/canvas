@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/canvas.css">
+    <title>Editando desenho</title>
+</head>
+
+<body>
+    <button id="return">&lt;- Voltar</button>
+    <canvas id="main-canvas" height="999" width="999"></canvas>
+    <div id="drawing-options">
+        <div id="resizer"></div>
+        <div id="shape-selector">
+            <h3>Seletor de formas</h3>
+            <div id="shapes">
+                <button data-shape="circle" title="Círculo">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="triangle" title="Triângulo">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="equilateralTriangle" title="Triângulo equilátero">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="rectangle" title="Retângulo">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="diamond" title="Losango">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="star" title="estrela">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="trapezium" title="Trapézio">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="oval" title="Oval">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="pentagon" title="Pentágono">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+                <button data-shape="heptagon" title="Hexágono">
+                    <canvas height="16px" width="16px"></canvas>
+                </button>
+            </div>
+        </div>
+        <div id="drawing-type">
+            <h3>Tipo de desenho:</h3>
+            <button data-type="free">Desenho livre: <canvas height="200px" width="200px"></canvas></button>
+            <button data-type="line">Linhas: <canvas height="200px" width="200px"></canvas></button>
+            <button data-type="text">Texto: <canvas height="200px" width="200px"></canvas></button>
+            <button data-type="clear">Borracha: <canvas height="200px" width="200px"></canvas></button>
+        </div>
+        <div id="caracteristics">
+            <datalist id="availableFonts"></datalist>
+            <label for="drawing-line-color">Cor: </label>
+            <input id="drawing-line-color" type="color">
+            <br>
+            <label for="drawing-line-width">Espessura: </label>
+            <input id="drawing-line-width" type="number" min="2" value="6">
+        </div>
+    </div>
+    <script src="canvas.js"></script>
+</body>
+
+</html>
