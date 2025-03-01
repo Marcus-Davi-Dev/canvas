@@ -11,15 +11,15 @@
 
 <body>
     <header>
-        <button id="mais">
+        <button id="more">
             <svg viewBox="0 0 448 512" height="41.59px">
                 <path fill="currentColor"
                     d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z" />
             </svg>
         </button>
         <form role="search" action="#">
-            <input id="pesquisarQuery" placeholder="Pesquisa...">
-            <button id="pesquisarBtn">
+            <input id="searchQuery" placeholder="Pesquisa...">
+            <button id="searchBtn">
                 <svg viewbox="0 0 512 512" height="41.59px">
                     <path fill="currentColor"
                         d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z">
@@ -32,15 +32,15 @@
             <ul>
                 <li id="tudo" aria-selected="true">
                     <button>Tudo</button>
-                    <span class="secao-contador-desenhos hidden" aria-hidden="true"></span>
+                    <span class="section-drawings-counter hidden" aria-hidden="true"></span>
                 </li>
                 <li id="favoritados" aria-selected="false">
                     <button>Favoritados</button>
-                    <span class="secao-contador-desenhos hidden" aria-hidden="true"></span>
+                    <span class="section-drawings-counter hidden" aria-hidden="true"></span>
                 </li>
                 <li id="arquivados" aria-selected="false">
                     <button>Arquivados</button>
-                    <span class="secao-contador-desenhos hidden" aria-hidden="true"></span>
+                    <span class="section-drawings-counter hidden" aria-hidden="true"></span>
                 </li>
             </ul>
 
@@ -56,20 +56,20 @@
             </div>
 
             <!-- menu de configuração -->
-            <div id="menu-configuracao" class="hidden">
+            <div id="config-menu" class="hidden">
                 <!-- falta adicionar mais umas configurações -->
-                <button id="sair-menu-config">&lt;-</button>
-                <div class="bloco-configuracao">
+                <button id="close-config-menu">&lt;-</button>
+                <div class="configuration-block">
                     <div class="flex-column">
-                        <span class="nome">Quantidade de desenhos</span>
-                        <span id="config-descricao-1" class="descricao">Mostra a quantidade de desenhos de cada seção ao
+                        <span class="name">Quantidade de desenhos</span>
+                        <span id="config-description-1" class="description">Mostra a quantidade de desenhos de cada seção ao
                             lado do nome delas</span>
                     </div>
                     <input type="checkbox" aria-describedby="config-descricao-1">
                 </div>
 
-                <div class="bloco-configuracao">
-                    <span class="nome">Tema</span>
+                <div class="configuration-block">
+                    <span class="name">Tema</span>
                     <select>
                         <option>Automático</option>
                         <option>Claro</option>
@@ -79,8 +79,8 @@
             </div>
         </aside>
         <main>
-            <div id="desenhos"></div>
-            <div id="novo-desenho" role="button" aria-label="Criar novo desenho">+</div>
+            <div id="drawings"></div>
+            <div id="new-drawing" role="button" aria-label="Criar novo desenho">+</div>
         </main>
     </div>
     <script src="app.js"></script>

@@ -71,7 +71,7 @@ body>.wrraper aside ul>li[aria-selected='true'] {
     border-radius: 5px;
 }
 
-body>.wrraper aside ul>li>span.secao-contador-desenhos:not(.hidden) {
+body>.wrraper aside ul>li>span.section-drawings-counter:not(.hidden) {
     display: inline-block;
     width: 19px;
     height: 19px;
@@ -102,27 +102,27 @@ body>.wrraper aside>div[data-config-btn-parent] {
     place-items: center;
 }
 
-#menu-configuracao:not(.hidden) {
+#config-menu:not(.hidden) {
     display: flex;
     flex-direction: column;
 }
 
-.bloco-configuracao {
+.configuration-block {
     display: flex;
     justify-content: space-between;
     margin-bottom: 10px;
 }
 
-.bloco-configuracao input[type="checkbox"] {
+.configuration-block input[type="checkbox"] {
     width: 15px;
 }
 
-.bloco-configuracao .nome {
+.configuration-block .name {
     font-weight: bold;
     font-size: 15px;
 }
 
-.bloco-configuracao .descricao {
+.configuration-block .description {
     font-size: 12px;
 }
 
@@ -163,7 +163,7 @@ header .entity {
     font-size: 52px;
 }
 
-#novo-desenho {
+#new-drawing {
     position: absolute;
     right: 20px;
     bottom: 20px;
@@ -177,7 +177,7 @@ header .entity {
     font-size: 28px;
 }
 
-#desenhos {
+#drawings {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -186,18 +186,16 @@ header .entity {
     padding-top: 7px;
 }
 
-#desenhos>.desenho {
-    /* anotações: para dispositivo móvel p, m e g */
+#drawings>.drawing {
     width: 40%;
     height: max-content;
-    /* fim das anotações */
     border: 3px var(--darker-border-color) solid;
     border-radius: 7px;
     display: flex;
     flex-direction: column;
 }
 
-#desenhos>.desenho>img {
+#drawings>.drawing>img {
     border-radius: 6px 6px 0 0;
     max-height: 73px;
 }
@@ -207,7 +205,7 @@ header .entity {
     justify-content: space-between;
 }
 
-.info .opcoes {
+.info .options {
     display: flex;
     width: max-content;
 }
