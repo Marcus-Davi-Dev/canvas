@@ -439,28 +439,28 @@ ctx.lineJoin = "round";
 
 const draw = new Draw(canvas);
 
-// const sharedWorker = new SharedWorker("sharedWorker.js");
-// 
-// sharedWorker.port.onmessage = function (ev) {
-// const msg = ev.data;
-// if (msg.type === "update drawing" && msg.result === "error") {
-// alert(msg.mensagemErro);
-// } else if (msg.type === "get drawing") {
-// if (msg.result === "success") {
-// const img = new Image();
-// img.src = URL.createObjectURL(msg.img);
-// img.onload = function () {
-// URL.revokeObjectURL(img.src);
-// draw.ctx.drawImage(img, 0, 0);
-// }
-// } else {
-// alert(msg.mensagemErro);
-// }
-// }
-// }
-// 
-// sharedWorker.port.postMessage({ type: "get drawing", name: (URL.parse(window.location)).searchParams.get("drawing"), section: (URL.parse(window.location)).searchParams.get("section")});
-// 
+const sharedWorker = new SharedWorker("sharedWorker.js");
+
+sharedWorker.port.onmessage = function (ev) {
+    const msg = ev.data;
+    if (msg.type === "update drawing" && msg.result === "error") {
+        alert(msg.errorMsg);
+    } else if (msg.type === "get drawing") {
+        if (msg.result === "success") {
+            const img = new Image();
+            img.src = URL.createObjectURL(msg.img);
+            img.onload = function () {
+                URL.revokeObjectURL(img.src);
+                draw.ctx.drawImage(img, 0, 0);
+            }
+        } else {
+            alert(msg.errorMsg);
+        }
+    }
+}
+
+sharedWorker.port.postMessage({ type: "get drawing", name: (URL.parse(window.location)).searchParams.get("drawing"), section: (URL.parse(window.location)).searchParams.get("section") });
+
 
 function caracteristicsChildren() {
     return Array.from(document.querySelector("#caracteristics").children);
@@ -498,7 +498,7 @@ function showTextCaracteristics() {
         drawingColorInput.oninput = function () {
             draw.ctx.fillStyle = this.value;
         }
-        if(fontsDatalist.children.length === 0){
+        if (fontsDatalist.children.length === 0) {
             (async function () {
                 if ("queryLocalFonts" in window) {
                     let availableFonts = await window.queryLocalFonts();
@@ -518,7 +518,7 @@ function showTextCaracteristics() {
                     }
                 } else {
                     let availableFonts = ["sans-serif", "serif", "monospace"];
-                    for(let i = 0; i < availableFonts.length; i++){
+                    for (let i = 0; i < availableFonts.length; i++) {
                         const option = document.createElement("option")
                         option.textContent = availableFonts[i];
                         option.value = availableFonts[i];
@@ -817,7 +817,7 @@ resizer.addEventListener("click", function () {
     drawingOptions.classList.toggle("resized");
 })
 
-closeCanvasBtn.addEventListener('click', function(){
+closeCanvasBtn.addEventListener('click', function () {
     const dialog = document.createElement("dialog");
 
     const title = document.createElement("h2");
@@ -831,7 +831,7 @@ closeCanvasBtn.addEventListener('click', function(){
 
     const cancelBtn = document.createElement("button");
     cancelBtn.textContent = "Cancelar";
-    cancelBtn.addEventListener('click', function(){
+    cancelBtn.addEventListener('click', function () {
         dialog.close();
         dialog.remove();
     })
@@ -841,8 +841,8 @@ closeCanvasBtn.addEventListener('click', function(){
     const saveLinkWrraper = document.createElement("a");
     saveLinkWrraper.href = "index.html";
     saveLinkWrraper.textContent = "Salvar";
-    saveLinkWrraper.addEventListener('click', function(){
-        sharedWorker.port.postMessage({type: "update drawing", name: (URL.parse(window.location)).searchParams.get("drawing"), section: (URL.parse(window.location)).searchParams.get("section")});
+    saveLinkWrraper.addEventListener('click', function () {
+        sharedWorker.port.postMessage({ type: "update drawing", name: (URL.parse(window.location)).searchParams.get("drawing"), section: (URL.parse(window.location)).searchParams.get("section") });
     })
 
     const doNotSaveBtn = document.createElement("button");

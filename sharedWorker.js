@@ -142,7 +142,7 @@ onconnect = (event) => {
                     port.postMessage({
                         type: "create drawing",
                         result: "error",
-                        mensagemErro: "Nome inválido: já existe um desenho com esse nome."
+                        errorMsg: "Nome inválido: já existe um desenho com esse nome."
                     });
                     objectStore.add(Drawing.create(name, Drawing.stringImgToBlob("imagens/imagem_branca.png"), msg.section === "favoritados"));
                 } else if (cursor) {
@@ -168,7 +168,7 @@ onconnect = (event) => {
                         const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
                         objectStores.onerror = (err) => {
                             console.log(`Ocorreu um error tentando excluir o desenho ${msg.name}.`, err);
-                            port.postMessage({ type: "delete drawing", result: "error", mensagemErro: `Ocorreu um error tentano excluir o desenho ${msg.name}.` });
+                            port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentano excluir o desenho ${msg.name}.` });
                         }
                         objectStores.objectStore("favoritados").delete(msg.name);
                         const secaoTudoDeleteRequest = objectStores.objectStore("tudo").delete(msg.name);
@@ -179,7 +179,7 @@ onconnect = (event) => {
                         const deleteRequest = db.transaction([msg.section], "readwrite").objectStore(msg.section).delete(msg.name);
                         deleteRequest.onerror = (err) => {
                             console.log(`Ocorreu um error tentando excluir o desenho ${msg.name}`, err);
-                            port.postMessage({ type: "delete drawing", result: "error", mensagemErro: `Ocorreu um error tentando excluir o desenho ${msg.name}.` });
+                            port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentando excluir o desenho ${msg.name}.` });
                         }
                         deleteRequest.onsuccess = () => {
                             port.postMessage({ type: "delete drawing", result: "success", name: msg.name });
@@ -262,7 +262,7 @@ onconnect = (event) => {
                 } else if (cursor) {
                     cursor.continue();
                 } else {
-                    port.postMessage({ type: "archive drawing", result: "error", mensagemErro: "Desenho não encontrado." });
+                    port.postMessage({ type: "archive drawing", result: "error", errorMsg: "Desenho não encontrado." });
                 }
             }
         }
@@ -304,7 +304,7 @@ onconnect = (event) => {
                 } else if (cursor) {
                     cursor.continue();
                 } else {
-                    port.postMessage({ type: "update drawing", result: "error", mensagemErro: "Desenho não encontrado." });
+                    port.postMessage({ type: "update drawing", result: "error", errorMsg: "Desenho não encontrado." });
                     return;
                 }
             }

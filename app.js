@@ -40,7 +40,7 @@ sharedWorker.port.onmessage = (ev) => {
             asideSections[["tudo", "favoritados", "arquivados"].indexOf(asideSelectedSection)].children[1].textContent = +asideSections[["tudo", "favoritados", "arquivados"].indexOf(asideSelectedSection)].children[1].textContent + 1;
         } else {
             const advice = document.createElement("span");
-            advice.innerHTML = `<br> ${msg.mensagemErro} <br>`;
+            advice.innerHTML = `<br> ${msg.errorMsg} <br>`;
             advice.id = "aviso-input-invalido";
             advice.setAttribute("role", "alert");
             advice.style.color = "red";
@@ -57,7 +57,7 @@ sharedWorker.port.onmessage = (ev) => {
                 }
             }
         } else {
-            alert(msg.mensagemErro);
+            alert(msg.errorMsg);
         }
     }
     else if (msg.type === "render section") {
@@ -90,7 +90,7 @@ sharedWorker.port.onmessage = (ev) => {
     }
     else if (msg.type === "archive drawing") {
         if(msg.result === "error"){
-            alert(msg.mensagemErro);
+            alert(msg.errorMsg);
         }
         for (let i = 0; i < drawings.children.length; i++) {
             if (drawings.children[i].children[1].children[1].textContent === msg.name) {
@@ -406,7 +406,7 @@ newDrawingBtn.addEventListener('click', function () {
 // navegação entre seções.
 for (let i = 0; i < asideSections.length; i++) {
     asideSections[i].addEventListener('click', function () {
-        port.postMessage({ type: "render section", section: asideSections[i].children[0].textContent });
+        sharedWorker.port.postMessage({ type: "render section", section: asideSections[i].children[0].textContent });
         for (let j = 0; i < asideSections.length; i++) {
             asideSections[j].setAttribute("aria-selected", "false");
         }
@@ -437,12 +437,12 @@ more.addEventListener('click', function () {
         asideClosed = true;
     }
 
-    setTimeout(updateDrawingsMenuPosition, 1000)
+    setTimeout(updateDrawingsMenuPosition, 1000);
 })
 
-closeConfigMenuBtn.addEventListener('click', esconderMenuConfiguracao);
+closeConfigMenuBtn.addEventListener('click', hideConfigMenu);
 
-function exibirMenuConfiguracao() {
+function showConfigMenu() {
     asideSections[0].parentNode.classList.add("hidden");
     configBtn.parentNode.classList.add("hidden");
     configMenu.classList.remove("hidden");
@@ -451,7 +451,7 @@ function exibirMenuConfiguracao() {
     document.documentElement.style.setProperty("--aside-width", asideExtendedPlusWidth);
 }
 
-function esconderMenuConfiguracao() {
+function hideConfigMenu() {
     asideSections[0].parentNode.classList.remove("hidden");
     configBtn.parentNode.classList.remove("hidden");
     configMenu.classList.add("hidden");
