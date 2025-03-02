@@ -403,6 +403,9 @@ newDrawingBtn.addEventListener('click', function () {
     });
 });
 
+
+// Funcionalidades de outros elementos da UI que não estão diretamente relacionados à desenhos.
+
 // navegação entre seções.
 for (let i = 0; i < asideSections.length; i++) {
     asideSections[i].addEventListener('click', function () {
@@ -414,9 +417,6 @@ for (let i = 0; i < asideSections.length; i++) {
         asideSelectedSection = asideSections[i].children[0].textContent[0].toLowerCase() + asideSections[i].children[0].textContent.substring(1);
     })
 }
-
-// Funcionalidades de outros elementos da UI que não estão diretamente relacionados à desenhos.
-
 searchBtn.addEventListener('click', function (ev) {
     ev.preventDefault();
     sharedWorker.port.postMessage({type: "search drawings", section: asideSelectedSection, search: searchInput.value});
@@ -441,6 +441,7 @@ more.addEventListener('click', function () {
 })
 
 closeConfigMenuBtn.addEventListener('click', hideConfigMenu);
+configBtn.addEventListener('click', showConfigMenu);
 
 function showConfigMenu() {
     asideSections[0].parentNode.classList.add("hidden");
