@@ -23,6 +23,9 @@ const asideExtendedWidth = "133px";
 const asideExtendedPlusWidth = "200px";
 
 const sharedWorker = new SharedWorker("sharedWorker.js");
+sharedWorker.onerror = (err) => {
+    console.log("SharedWorker error:", err);
+}
 
 sharedWorker.port.onmessage = (ev) => {
     const msg = ev.data;

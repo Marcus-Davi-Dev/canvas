@@ -38,13 +38,16 @@ class Drawing {
 }
 
 onconnect = (event) => {
+    console.log("SharedWorker: shared worker connected.", event);
     const port = event.ports[0];
 
     let request = indexedDB.open("canvas", 1);
     request.onupgradeneeded = (ev) => {
+        console.log("SharedWorker: database created.");
         db = ev.target.result;
 
-        db.onerror = () => {
+        db.onerror = (err) => {
+            console.log("SharedWorker: an error ocurred in the database.", err)
             port.postMessage({ type: "DBerror" });
         }
 
@@ -132,6 +135,7 @@ onconnect = (event) => {
     })()
 
     port.onmessage = (ev) => {
+        console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
         if (msg.type === "create drawing") {
             const name = msg.name;
@@ -139,15 +143,17 @@ onconnect = (event) => {
             objectStore.openCursor().onsuccess = (ev) => {
                 const cursor = ev.target.result;
                 if (cursor && cursor.value.name === name) {
+                    console.log("SharedWorker: an error occurred when trying to create a drawing. An other drawing already heve the inputted name.");
                     port.postMessage({
                         type: "create drawing",
                         result: "error",
                         errorMsg: "Nome inválido: já existe um desenho com esse nome."
                     });
-                    objectStore.add(Drawing.create(name, Drawing.stringImgToBlob("imagens/imagem_branca.png"), msg.section === "favoritados"));
                 } else if (cursor) {
                     cursor.continue();
                 } else {
+                    console.log(`SharedWorker: drawing created with name ${msg.name}.`);
+                    objectStore.add(Drawing.create(name, Drawing.stringImgToBlob("imagens/imagem_branca.png"), msg.section === "favoritados"));
                     port.postMessage({
                         type: "create drawing",
                         result: "success",
@@ -191,6 +197,7 @@ onconnect = (event) => {
             }
         }
         else if (msg.type === "render section") {
+            console.log(`SharedWorker: section \'${msg.section}\' rendered.`);
             let drawings = [];
             db.transaction([msg.section]).objectStore(msg.section).openCursor().onsuccess = (ev) => {
                 const cursor = ev.target.result;
@@ -270,6 +277,7 @@ onconnect = (event) => {
             db.transaction([msg.section]).objectStore(msg.section).openCursor().onsuccess = (ev) => {
                 const cursor = ev.target.result;
                 if (cursor.value.name === msg.name) {
+                    console.log(`SharedWorker: drawing \'${msg.name}\' exported.`);
                     port.postMessage({ type: "export drawing", img: cursor.value.img, name: cursor.value.name });
                 } else if (cursor) {
                     cursor.continue();
@@ -280,6 +288,7 @@ onconnect = (event) => {
             db.transaction([msg.section]).objectStore(msg.section).openCursor().onsuccess = (ev) => {
                 const cursor = ev.target.result;
                 if (cursor.value.name === msg.name) {
+                    console.log(`SharedWorker: drawing ${msg.name} getted.`)
                     port.postMessage({ type: "get drawing", img: cursor.value.img });
                 } else if (cursor) {
                     cursor.continue();
@@ -292,19 +301,26 @@ onconnect = (event) => {
                 if (cursor && cursor.value.name === msg.name) {
                     if (msg.section === "arquivados") {
                         cursor.update(Drawing.create(cursor.value.name, msg.img, false));
+                        console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
                     } else if (msg.section === "favoritados" || cursor.value.favoritated) {
+                        console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
                         cursor.update(Drawing.create(cursor.value.name, msg.img, true));
                         const secaoTudoUpdateRequest = objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, msg.img, true));
                         secaoTudoUpdateRequest.onsuccess = () => {
                             port.postMessage({ type: "update drawing", result: "success" });
                         }
+                        secaoTudoUpdateRequest.onerror = (err) => {
+                            console.log(`SharedWorker: an error has ocurred when trying to update the drawing ${msg.name}.`);
+                        }
                     } else {
                         cursor.update(Drawing.create(cursor.value.name, msg.img, false));
+                        console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
                     }
                 } else if (cursor) {
                     cursor.continue();
                 } else {
                     port.postMessage({ type: "update drawing", result: "error", errorMsg: "Desenho não encontrado." });
+                    console.log(`SharedWorker: drawing \'${msg.name}\' not found on object store ${msg.section}`);
                     return;
                 }
             }
@@ -320,6 +336,7 @@ onconnect = (event) => {
                 }
                 port.postMessage({type: "search drawings", result: "success", drawings: filteredDrawings});
             }
+            console.log(`SharedWorker: drawings on ${msg.section} filtered. Result: ${filteredDrawings}.`);
         }
     }
 }
