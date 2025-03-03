@@ -39,7 +39,7 @@ class Drawing {
 
 console.log("Something is ever happening here?");
 
-onconnect = (event) => {
+self.onconnect = (event) => {
     console.log("SharedWorker: shared worker connected.", event);
     const port = event.ports[0];
 
@@ -136,7 +136,7 @@ onconnect = (event) => {
         }
     })()
 
-    port.onmessage = (ev) => {
+    self.port.onmessage = (ev) => {
         console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
         if (msg.type === "create drawing") {
