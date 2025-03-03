@@ -410,7 +410,7 @@ newDrawingBtn.addEventListener('click', function () {
 for (let i = 0; i < asideSections.length; i++) {
     asideSections[i].addEventListener('click', function () {
         sharedWorker.port.postMessage({ type: "render section", section: asideSections[i].children[0].textContent });
-        for (let j = 0; i < asideSections.length; i++) {
+        for (let j = 0; j < asideSections.length; j++) {
             asideSections[j].setAttribute("aria-selected", "false");
         }
         asideSections[i].setAttribute("aria-selected", "true");
