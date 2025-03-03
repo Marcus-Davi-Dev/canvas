@@ -37,6 +37,8 @@ class Drawing {
     }
 }
 
+console.log("Something is ever happening here?");
+
 onconnect = (event) => {
     console.log("SharedWorker: shared worker connected.", event);
     const port = event.ports[0];
