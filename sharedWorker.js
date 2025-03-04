@@ -136,7 +136,7 @@ self.onconnect = (event) => {
         }
     })()
 
-    self.port.onmessage = (ev) => {
+    port.onmessage = (ev) => {
         console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
         if (msg.type === "create drawing") {
