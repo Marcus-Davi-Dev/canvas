@@ -134,7 +134,7 @@ self.onconnect = (event) => {
         }
     })()
 
-    port.onmessage = (ev) => {
+    port.onmessage = async (ev) => {
         console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
         if (msg.type === "create drawing") {
@@ -153,7 +153,7 @@ self.onconnect = (event) => {
                     cursor.continue();
                 } else {
                     console.log(`SharedWorker: drawing created with name ${msg.name}.`);
-                    objectStore.add(Drawing.create(name, Drawing.stringImgToBlob("imagens/imagem_branca.png"), msg.section === "favoritados"));
+                    objectStore.add(Drawing.create(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), msg.section === "favoritados"));
                     port.postMessage({
                         type: "create drawing",
                         result: "success",
