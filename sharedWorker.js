@@ -134,13 +134,13 @@ self.onconnect = (event) => {
         }
     })()
 
-    port.onmessage = async (ev) => {
+    port.onmessage = (ev) => {
         console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
         if (msg.type === "create drawing") {
             const name = msg.name;
             const objectStore = db.transaction([msg.section], "readwrite").objectStore(msg.section);
-            objectStore.openCursor().onsuccess = (ev) => {
+            objectStore.openCursor().onsuccess = async (ev) => {
                 const cursor = ev.target.result;
                 if (cursor && cursor.value.name === name) {
                     console.log("SharedWorker: an error occurred when trying to create a drawing. An other drawing already heve the inputted name.");
