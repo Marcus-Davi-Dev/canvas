@@ -18,20 +18,11 @@ class Drawing {
     }
 
     /**
-     * Converte uma string contendo a url da imagem em um blob da imagem.
+     * Fetch a url da imagem e retorna o blob.
      * @param {String} img String contendo a url da imagem.
      */
     static async stringImgToBlob(imgUrl) {
-        const image = new Image();
-        image.src = imgUrl;
-        // faz o código esperar até que a imagem seja carregada.
-        await new Promise((resolve, reject)=>{
-            image.onload = () => {resolve()};
-        })
-        const offscreenCanvas = new OffscreenCanvas(image.width, image.height);
-        const ctx = offscreenCanvas.getContext("2d");
-        ctx.drawImage(image, 0, 0);
-        return await offscreenCanvas.convertToBlob();
+        return await (await (fetch(imgUrl))).blob();
     }
 }
 
