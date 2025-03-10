@@ -24,9 +24,20 @@ class Drawing {
     static async stringImgToBlob(imgUrl) {
         return await (await (fetch(imgUrl))).blob();
     }
-}
 
-console.log("Something is ever happening here?");
+    static async searchDrawing(name, section) {
+        db.transaction([section]).objectStore(section).openCursor().onsuccess = (ev) => {
+            const cursor = ev.target.result;
+            if (cursor && cursor.value.name === name) {
+                return cursor.value;
+            } else if (cursor) {
+                cursor.continue();
+            } else {
+                return null;
+            }
+        }
+    }
+}
 
 self.onconnect = (event) => {
     console.log("SharedWorker: shared worker connected.", event);
@@ -125,65 +136,59 @@ self.onconnect = (event) => {
         }
     })()
 
-    port.onmessage = (ev) => {
+    port.onmessage = async (ev) => {
         console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
         if (msg.type === "create drawing") {
             const name = msg.name;
-            const objectStore = db.transaction([msg.section], "readwrite").objectStore(msg.section);
-            objectStore.openCursor().onsuccess = async (ev) => {
-                const cursor = ev.target.result;
-                if (cursor && cursor.value.name === name) {
-                    console.log("SharedWorker: an error occurred when trying to create a drawing. An other drawing already heve the inputted name.");
-                    port.postMessage({
-                        type: "create drawing",
-                        result: "error",
-                        errorMsg: "Nome inválido: já existe um desenho com esse nome."
-                    });
-                } else if (cursor) {
-                    cursor.continue();
+            const drawingInfos = await Drawing.searchDrawing(name, msg.section);
+            if (drawingInfos) {
+                console.log("SharedWorker: an error occurred when trying to create a drawing. An other drawing already heve the inputted name.");
+                port.postMessage({
+                    type: "create drawing",
+                    result: "error",
+                    errorMsg: "Nome inválido: já existe um desenho com esse nome."
+                });
+            } else {
+                console.log(`SharedWorker: drawing created with name ${msg.name}.`);
+                if (msg.section === "favoritados") {
+                    const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
+                    objectStores.objectStore("favoritados").add(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), true);
+                    objectStores.objectStore("tudo").add(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), true);
                 } else {
-                    console.log(`SharedWorker: drawing created with name ${msg.name}.`);
-                    objectStore.add(Drawing.create(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), msg.section === "favoritados"));
-                    port.postMessage({
-                        type: "create drawing",
-                        result: "success",
-                        drawing: {
-                            name: cursor.value.name,
-                            img: cursor.value.img,
-                            favoritated: cursor.value.favoritated
-                        }
-                    });
+                    db.transaction([msg.section], "readwrite").objectStore(msg.section).add(Drawing.create(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), false));
                 }
+                port.postMessage({
+                    type: "create drawing",
+                    result: "success",
+                    drawing: {
+                        name: cursor.value.name,
+                        img: cursor.value.img,
+                        favoritated: cursor.value.favoritated
+                    }
+                });
             }
         }
         else if (msg.type === "delete drawing") {
-            db.transaction([msg.section]).objectStore(msg.section).openCursor().onsuccess = (ev) => {
-                const cursor = ev.target.result;
-                if (cursor && msg.name === cursor.value.name) {
-                    if (cursor.value.favoritated) {
-                        const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
-                        objectStores.onerror = (err) => {
-                            console.log(`Ocorreu um error tentando excluir o desenho ${msg.name}.`, err);
-                            port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentano excluir o desenho ${msg.name}.` });
-                        }
-                        objectStores.objectStore("favoritados").delete(msg.name);
-                        const secaoTudoDeleteRequest = objectStores.objectStore("tudo").delete(msg.name);
-                        secaoTudoDeleteRequest.onsuccess = () => {
-                            port.postMessage({ type: "delete drawing", result: "success", name: msg.name });
-                        }
-                    } else {
-                        const deleteRequest = db.transaction([msg.section], "readwrite").objectStore(msg.section).delete(msg.name);
-                        deleteRequest.onerror = (err) => {
-                            console.log(`Ocorreu um error tentando excluir o desenho ${msg.name}`, err);
-                            port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentando excluir o desenho ${msg.name}.` });
-                        }
-                        deleteRequest.onsuccess = () => {
-                            port.postMessage({ type: "delete drawing", result: "success", name: msg.name });
-                        }
-                    }
-                } else if (cursor) {
-                    cursor.continue();
+            if ((await Drawing.searchDrawing(msg.name, msg.section)).favoritated) {
+                const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
+                objectStores.onerror = (err) => {
+                    console.log(`Ocorreu um error tentando excluir o desenho ${msg.name}.`, err);
+                    port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentano excluir o desenho ${msg.name}.` });
+                }
+                objectStores.objectStore("favoritados").delete(msg.name);
+                const secaoTudoDeleteRequest = objectStores.objectStore("tudo").delete(msg.name);
+                secaoTudoDeleteRequest.onsuccess = () => {
+                    port.postMessage({ type: "delete drawing", result: "success", name: msg.name });
+                }
+            } else {
+                const deleteRequest = db.transaction([msg.section], "readwrite").objectStore(msg.section).delete(msg.name);
+                deleteRequest.onerror = (err) => {
+                    console.log(`Ocorreu um error tentando excluir o desenho ${msg.name}`, err);
+                    port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentando excluir o desenho ${msg.name}.` });
+                }
+                deleteRequest.onsuccess = () => {
+                    port.postMessage({ type: "delete drawing", result: "success", name: msg.name });
                 }
             }
         }
@@ -201,67 +206,63 @@ self.onconnect = (event) => {
             }
         }
         else if (msg.type === "favoritate drawing") {
-            const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
-            objectStores.onerror = (err) => {
-                console.log(`Ocorreu um error tentando favoritar o desenho ${msg.name}. Seção: ${msg.section}`, err);
-                port.postMessage({ type: "favoritate drawing", result: "error" });
-            }
-            objectStores.objectStore(msg.section).openCursor().onsuccess = (ev) => {
-                const cursor = ev.target.result;
-                if (cursor && msg.name === cursor.value.name) {
-                    if (msg.section === "arquivados" && window.confirm("Tem certeza? Favoritar este desenho também irá desarquivar-lo. (Se ele é tão importante para estar favoritado não deveria estar arquivado.)")) {
-                        objectStores.objectStore("arquivados").delete(msg.name);
-                        objectStores.objectStore("favoritados").add(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
-                        const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
-                        secaoTudoAddRequest.onsuccess = () => {
-                            port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: true });
-                        }
-                    } else if (msg.section === "favoritados" || cursor.value.favoritated) {
-                        objectStores.objectStore("favoritated").delete(msg.name);
-                        const updateRequest = objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, cursor.value.img, false, cursor.value.criacao));
-                        updateRequest.onsuccess = () => {
-                            port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: false });
-                        }
-                    } else {
-                        objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
-                        const addRequest = objectStores.objectStore("favoritated").add(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
-                        addRequest.onsuccess = () => {
-                            port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: true });
-                        }
-                    }
-                } else if (cursor) {
-                    cursor.continue();
+            const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
+
+            if (drawingInfos) {
+                const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
+                objectStores.onerror = (err) => {
+                    console.log(`Ocorreu um error tentando favoritar o desenho ${msg.name}. Seção: ${msg.section}`, err);
+                    port.postMessage({ type: "favoritate drawing", result: "error" });
                 }
+                if (msg.section === "arquivados" && window.confirm("Tem certeza? Favoritar este desenho também irá desarquivar-lo. (Se ele é tão importante para estar favoritado não deveria estar arquivado.)")) {
+                    objectStores.objectStore("arquivados").delete(msg.name);
+                    objectStores.objectStore("favoritados").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
+                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
+                    secaoTudoAddRequest.onsuccess = () => {
+                        port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: true });
+                    }
+                } else if (msg.section === "favoritados" || cursor.value.favoritated) {
+                    objectStores.objectStore("favoritated").delete(msg.name);
+                    const updateRequest = objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, cursor.value.img, false, cursor.value.criacao));
+                    updateRequest.onsuccess = () => {
+                        port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: false });
+                    }
+                } else {
+                    objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
+                    const addRequest = objectStores.objectStore("favoritated").add(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
+                    addRequest.onsuccess = () => {
+                        port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: true });
+                    }
+                }
+            } else {
+                port.postMessage({ type: "favoritate drawing", result: "error", errorMsg: "Desenho não encontrado." })
             }
         }
         else if (msg.type === "archive drawing") {
-            const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
-            objectStores.onerror = (err) => {
-                console.log(`Ocorreu um error tentando arquivar o desenho ${msg.name}.`, err);
-                port.postMessage({ type: "archive drawing", result: "error" });
-            }
-            objectStores.objectStore(msg.section).openCursor().onsuccess = (ev) => {
-                const cursor = ev.target.result;
-                if (cursor && cursor.value.name === msg.name) {
-                    if (cursor.value.favoritated) {
-                        objectStores.objectStore("tudo").delete(msg.name);
-                        objectStores.objectStore("favoritados").delete(msg.name);
-                        const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(cursor.value.name, cursor.value.img, false, cursor.value.criacao));
-                        secaoArquivadosAddRequest.onsuccess = () => {
-                            port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favoritated: true });
-                        }
-                    } else {
-                        objectStores.objectStore("arquivados").delete(msg.name);
-                        const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(cursor.value.name, cursor.value.img, false, cursor.value.criacao));
-                        secaoTudoAddRequest.onsuccess = () => {
-                            port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favoritated: false });
-                        }
-                    }
-                } else if (cursor) {
-                    cursor.continue();
-                } else {
-                    port.postMessage({ type: "archive drawing", result: "error", errorMsg: "Desenho não encontrado." });
+            const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
+
+            if (drawingInfos) {
+                const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
+                objectStores.onerror = (err) => {
+                    console.log(`Ocorreu um error tentando arquivar o desenho ${msg.name}.`, err);
+                    port.postMessage({ type: "archive drawing", result: "error" });
                 }
+                if (drawingInfos.favoritated) {
+                    objectStores.objectStore("tudo").delete(msg.name);
+                    objectStores.objectStore("favoritados").delete(msg.name);
+                    const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
+                    secaoArquivadosAddRequest.onsuccess = () => {
+                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favoritated: true });
+                    }
+                } else {
+                    objectStores.objectStore("arquivados").delete(msg.name);
+                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(cursor.value.name, cursor.value.img, false, cursor.value.criacao));
+                    secaoTudoAddRequest.onsuccess = () => {
+                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favoritated: false });
+                    }
+                }
+            } else {
+                port.postMessage({ type: "archive drawing", result: "error", errorMsg: "Desenho não encontrado." });
             }
         }
         else if (msg.type === "export drawing") {
@@ -276,44 +277,33 @@ self.onconnect = (event) => {
             }
         }
         else if (msg.type === "get drawing") {
-            db.transaction([msg.section]).objectStore(msg.section).openCursor().onsuccess = (ev) => {
-                const cursor = ev.target.result;
-                if (cursor.value.name === msg.name) {
-                    console.log(`SharedWorker: drawing ${msg.name} getted.`)
-                    port.postMessage({ type: "get drawing", img: cursor.value.img });
-                } else if (cursor) {
-                    cursor.continue();
-                }
-            }
+            return (await Drawing.searchDrawing(msg.name, msg.section)).img;
         } else if (msg.type === "update drawing") {
-            const objectStores = db.transaction(["favoritados", "tudo", "arquivados"], "readwrite");
-            objectStores.objectStore(msg.section).openCursor().onsuccess = (ev) => {
-                const cursor = ev.target.result;
-                if (cursor && cursor.value.name === msg.name) {
-                    if (msg.section === "arquivados") {
-                        cursor.update(Drawing.create(cursor.value.name, msg.img, false));
-                        console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
-                    } else if (msg.section === "favoritados" || cursor.value.favoritated) {
-                        console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
-                        cursor.update(Drawing.create(cursor.value.name, msg.img, true));
-                        const secaoTudoUpdateRequest = objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, msg.img, true));
-                        secaoTudoUpdateRequest.onsuccess = () => {
-                            port.postMessage({ type: "update drawing", result: "success" });
-                        }
-                        secaoTudoUpdateRequest.onerror = (err) => {
-                            console.log(`SharedWorker: an error has ocurred when trying to update the drawing ${msg.name}.`);
-                        }
-                    } else {
-                        cursor.update(Drawing.create(cursor.value.name, msg.img, false));
-                        console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
+            const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
+            
+            if (drawingInfos) {
+                const objectStores = db.transaction(["favoritados", "tudo", "arquivados"], "readwrite");
+                if (msg.section === "arquivados") {
+                    objectStores.objectStore("arquivados").put(Drawing.create(cursor.value.name, msg.img, false));
+                    console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
+                } else if (msg.section === "favoritados" || cursor.value.favoritated) {
+                    console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
+                    objectStores.objectStore("favoritados").put(Drawing.create(cursor.value.name, msg.img, true));
+                    const secaoTudoUpdateRequest = objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, msg.img, true));
+                    secaoTudoUpdateRequest.onsuccess = () => {
+                        port.postMessage({ type: "update drawing", result: "success" });
                     }
-                } else if (cursor) {
-                    cursor.continue();
+                    secaoTudoUpdateRequest.onerror = (err) => {
+                        console.log(`SharedWorker: an error has ocurred when trying to update the drawing ${msg.name}.`);
+                    }
                 } else {
-                    port.postMessage({ type: "update drawing", result: "error", errorMsg: "Desenho não encontrado." });
-                    console.log(`SharedWorker: drawing \'${msg.name}\' not found on object store ${msg.section}`);
-                    return;
+                    objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, msg.img, false));
+                    console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
                 }
+            } else {
+                port.postMessage({ type: "update drawing", result: "error", errorMsg: "Desenho não encontrado." });
+                console.log(`SharedWorker: drawing \'${msg.name}\' not found on object store ${msg.section}`);
+                return;
             }
         } else if (msg.type === "search drawings") {
             let filteredDrawings = [];
@@ -325,7 +315,7 @@ self.onconnect = (event) => {
                     cursor.continue();
                     return;
                 }
-                port.postMessage({type: "search drawings", result: "success", drawings: filteredDrawings});
+                port.postMessage({ type: "search drawings", result: "success", drawings: filteredDrawings });
             }
             console.log(`SharedWorker: drawings on ${msg.section} filtered. Result: ${filteredDrawings}.`);
         }
