@@ -151,20 +151,21 @@ self.onconnect = (event) => {
                 });
             } else {
                 console.log(`SharedWorker: drawing created with name ${msg.name}.`);
+                const imgBlob = await Drawing.stringImgToBlob("imagens/imagem_branca.png");
                 if (msg.section === "favoritados") {
                     const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
-                    objectStores.objectStore("favoritados").add(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), true);
-                    objectStores.objectStore("tudo").add(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), true);
+                    objectStores.objectStore("favoritados").add(name, imgBlob, true);
+                    objectStores.objectStore("tudo").add(name, imgBlob, true);
                 } else {
-                    db.transaction([msg.section], "readwrite").objectStore(msg.section).add(Drawing.create(name, await Drawing.stringImgToBlob("imagens/imagem_branca.png"), false));
+                    db.transaction([msg.section], "readwrite").objectStore(msg.section).add(Drawing.create(name, imgBlob, false));
                 }
                 port.postMessage({
                     type: "create drawing",
                     result: "success",
                     drawing: {
-                        name: cursor.value.name,
-                        img: cursor.value.img,
-                        favoritated: cursor.value.favoritated
+                        name: name,
+                        img: imgBlob,
+                        favoritated: msg.section === "favoritados"
                     }
                 });
             }
