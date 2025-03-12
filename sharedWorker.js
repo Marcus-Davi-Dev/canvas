@@ -26,16 +26,18 @@ class Drawing {
     }
 
     static async searchDrawing(name, section) {
-        db.transaction([section]).objectStore(section).openCursor().onsuccess = (ev) => {
-            const cursor = ev.target.result;
-            if (cursor && cursor.value.name === name) {
-                return cursor.value;
-            } else if (cursor) {
-                cursor.continue();
-            } else {
-                return null;
+        return await new Promise((resolve) => {
+            db.transaction([section]).objectStore(section).openCursor().onsuccess = (ev) => {
+                const cursor = ev.target.result;
+                if (cursor && cursor.value.name === name) {
+                    resolve(cursor.value);
+                } else if (cursor) {
+                    cursor.continue();
+                } else {
+                    resolve(null);
+                }
             }
-        }
+        })
     }
 }
 
@@ -281,7 +283,7 @@ self.onconnect = (event) => {
             return (await Drawing.searchDrawing(msg.name, msg.section)).img;
         } else if (msg.type === "update drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
-            
+
             if (drawingInfos) {
                 const objectStores = db.transaction(["favoritados", "tudo", "arquivados"], "readwrite");
                 if (msg.section === "arquivados") {
