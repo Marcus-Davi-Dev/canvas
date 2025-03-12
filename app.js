@@ -418,12 +418,12 @@ newDrawingBtn.addEventListener('click', function () {
 // navegação entre seções.
 for (let i = 0; i < asideSections.length; i++) {
     asideSections[i].addEventListener('click', function () {
-        sharedWorker.port.postMessage({ type: "render section", section: asideSections[i].children[0].textContent });
+        asideSelectedSection = asideSections[i].children[0].textContent[0].toLowerCase() + asideSections[i].children[0].textContent.substring(1);
+        sharedWorker.port.postMessage({ type: "render section", section: asideSelectedSection });
         for (let j = 0; j < asideSections.length; j++) {
             asideSections[j].setAttribute("aria-selected", "false");
         }
         asideSections[i].setAttribute("aria-selected", "true");
-        asideSelectedSection = asideSections[i].children[0].textContent[0].toLowerCase() + asideSections[i].children[0].textContent.substring(1);
     })
 }
 searchBtn.addEventListener('click', function (ev) {
