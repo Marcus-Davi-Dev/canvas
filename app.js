@@ -232,6 +232,7 @@ sharedWorker.port.onmessage = (ev) => {
             }
         }
     }else if(msg.type === "search drawings"){
+        drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         for(let i = 0; i < msg.drawings.length; i++){
             renderDrawing({name: msg.drawings[i].name, img: msg.drawings[i].img, favoritated: msg.drawings[i].favoritated});
         }
@@ -419,6 +420,7 @@ newDrawingBtn.addEventListener('click', function () {
 for (let i = 0; i < asideSections.length; i++) {
     asideSections[i].addEventListener('click', function () {
         asideSelectedSection = asideSections[i].children[0].textContent[0].toLowerCase() + asideSections[i].children[0].textContent.substring(1);
+        drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         sharedWorker.port.postMessage({ type: "render section", section: asideSelectedSection });
         for (let j = 0; j < asideSections.length; j++) {
             asideSections[j].setAttribute("aria-selected", "false");
