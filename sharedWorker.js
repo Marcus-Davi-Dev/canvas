@@ -220,19 +220,19 @@ self.onconnect = (event) => {
                 if (msg.section === "arquivados" && window.confirm("Tem certeza? Favoritar este desenho também irá desarquivar-lo. (Se ele é tão importante para estar favoritado não deveria estar arquivado.)")) {
                     objectStores.objectStore("arquivados").delete(msg.name);
                     objectStores.objectStore("favoritados").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
-                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
+                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
                     secaoTudoAddRequest.onsuccess = () => {
                         port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: true });
                     }
-                } else if (msg.section === "favoritados" || cursor.value.favoritated) {
+                } else if (msg.section === "favoritados" || drawingInfos.favoritated) {
                     objectStores.objectStore("favoritated").delete(msg.name);
-                    const updateRequest = objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, cursor.value.img, false, cursor.value.criacao));
+                    const updateRequest = objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     updateRequest.onsuccess = () => {
                         port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: false });
                     }
                 } else {
-                    objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
-                    const addRequest = objectStores.objectStore("favoritated").add(Drawing.create(cursor.value.name, cursor.value.img, true, cursor.value.criacao));
+                    objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
+                    const addRequest = objectStores.objectStore("favoritated").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
                     addRequest.onsuccess = () => {
                         port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favoritated: true });
                     }
@@ -250,16 +250,22 @@ self.onconnect = (event) => {
                     console.log(`Ocorreu um error tentando arquivar o desenho ${msg.name}.`, err);
                     port.postMessage({ type: "archive drawing", result: "error" });
                 }
-                if (drawingInfos.favoritated) {
+                if (drawingInfos.favoritated || msg.section === "favoritados") {
                     objectStores.objectStore("tudo").delete(msg.name);
                     objectStores.objectStore("favoritados").delete(msg.name);
                     const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     secaoArquivadosAddRequest.onsuccess = () => {
                         port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favoritated: true });
                     }
-                } else {
+                } else if(msg.section === "tudo"){
+                    objectStores.objectStore("tudo").delete(msg.name);
+                    const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
+                    secaoArquivadosAddRequest.onsuccess = () => {
+                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favoritated: true });
+                    }
+                }else {
                     objectStores.objectStore("arquivados").delete(msg.name);
-                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(cursor.value.name, cursor.value.img, false, cursor.value.criacao));
+                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     secaoTudoAddRequest.onsuccess = () => {
                         port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favoritated: false });
                     }
@@ -287,12 +293,12 @@ self.onconnect = (event) => {
             if (drawingInfos) {
                 const objectStores = db.transaction(["favoritados", "tudo", "arquivados"], "readwrite");
                 if (msg.section === "arquivados") {
-                    objectStores.objectStore("arquivados").put(Drawing.create(cursor.value.name, msg.img, false));
+                    objectStores.objectStore("arquivados").put(Drawing.create(drawingInfos.name, msg.img, false));
                     console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
-                } else if (msg.section === "favoritados" || cursor.value.favoritated) {
+                } else if (msg.section === "favoritados" || drawingInfos.favoritated) {
                     console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
-                    objectStores.objectStore("favoritados").put(Drawing.create(cursor.value.name, msg.img, true));
-                    const secaoTudoUpdateRequest = objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, msg.img, true));
+                    objectStores.objectStore("favoritados").put(Drawing.create(drawingInfos.name, msg.img, true));
+                    const secaoTudoUpdateRequest = objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, msg.img, true));
                     secaoTudoUpdateRequest.onsuccess = () => {
                         port.postMessage({ type: "update drawing", result: "success" });
                     }
@@ -300,7 +306,7 @@ self.onconnect = (event) => {
                         console.log(`SharedWorker: an error has ocurred when trying to update the drawing ${msg.name}.`);
                     }
                 } else {
-                    objectStores.objectStore("tudo").put(Drawing.create(cursor.value.name, msg.img, false));
+                    objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, msg.img, false));
                     console.log(`SharedWorker: drawing \'${msg.name}\' updated.`);
                 }
             } else {
