@@ -59,6 +59,9 @@ sharedWorker.port.onmessage = (ev) => {
                     break;
                 }
             }
+            if(!drawings.children.length){
+                drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
+            }
         } else {
             alert(msg.errorMsg);
         }
