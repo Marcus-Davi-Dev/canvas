@@ -35,7 +35,7 @@ sharedWorker.port.onmessage = (ev) => {
     if (msg.type === "create drawing") {
         if (msg.result === "success") {
             inputModal.close();
-            renderDrawing({ name: msg.drawing.name, img: msg.drawing.img, favoritated: msg.drawing.favoritated });
+            renderDrawing({ name: msg.drawing.name, img: msg.drawing.img, favorited: msg.drawing.favorited });
             if (inputModal.querySelector("#aviso-input-invalido")) {
                 inputModal.querySelector("#aviso-input-invalido").remove();
             }
@@ -69,14 +69,14 @@ sharedWorker.port.onmessage = (ev) => {
         }
     }
     else if (msg.type === "favoritate drawing") {
-        if (msg.result === "success" && msg.section === "tudo" && msg.favoritated) {
+        if (msg.result === "success" && msg.section === "tudo" && msg.favorited) {
             for (let i = 0; i < drawings.children.length; i++) {
                 if (drawings.children[i].querySelector(".info").children[0].textContent === msg.name) {
                     drawings.children[i].querySelector(".options").innerHTML = `<svg viewBox='0 0 576 512' height='17.7px' width='19.7px'><path fill='gold' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg> ${drawings[i].children[1].children[1].innerHTML}`;
                     drawings.children[i].querySelector("[popover]").children[2].textContent = "Desfavoritar";
                 }
             }
-        } else if (msg.result === "success" && msg.section === "tudo" && !msg.favoritated) {
+        } else if (msg.result === "success" && msg.section === "tudo" && !msg.favorited) {
             for (let i = 0; i < drawings.children.length; i++) {
                 if (drawings.children[i].querySelector(".info").children[0].textContent === msg.name) {
                     drawings.children[i].querySelector(".options").children[0].remove();
@@ -101,7 +101,7 @@ sharedWorker.port.onmessage = (ev) => {
             }
         }
         asideSections[0].children[1].textContent = +asideSections[0].children[1].textContent - 1;
-        if (msg.favoritated) {
+        if (msg.favorited) {
             asideSections[1].children[1].textContent = +asideSections[1].children[1].textContent - 1;
         }
         asideSections[2].children[1].textContent = +asideSections[2].children[1].textContent + 1;
@@ -234,7 +234,7 @@ sharedWorker.port.onmessage = (ev) => {
     }else if(msg.type === "search drawings"){
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         for(let i = 0; i < msg.drawings.length; i++){
-            renderDrawing({name: msg.drawings[i].name, img: msg.drawings[i].img, favoritated: msg.drawings[i].favoritated});
+            renderDrawing({name: msg.drawings[i].name, img: msg.drawings[i].img, favorited: msg.drawings[i].favorited});
         }
     }else if (msg.type === "init app") {
         if (msg.drawings.length === 0) {
@@ -258,7 +258,7 @@ sharedWorker.port.onmessage = (ev) => {
 /**
  * @param {Object} infos * name: nome do desenho
  *                       * img: path da imagem representativa do desenho.
- *                       * favoritated: se o desenho está favoritado.
+ *                       * favorited: se o desenho está favoritado.
 */
 function renderDrawing(infos) {
     const drawing = document.createElement("div");
@@ -284,8 +284,8 @@ function renderDrawing(infos) {
     const options = document.createElement("div");
     options.classList.add("options");
     options.innerHTML = "<button><svg viewBox='0 0 448 512' height='17.7px' width='19.7px'><path fill='red' d='M135.2 17.7C140.6 6.8 151.7 0 163.8 0L284.2 0c12.1 0 23.2 6.8 28.6 17.7L320 32l96 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 7.2-14.3zM32 128l384 0 0 320c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-320zm96 64c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16z'/></svg></button>  <button><svg viewBox='0 0 128 512' width='10px' height='19.7px'><path fill='currentColor' d='M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z'/></svg></button>";
-    if (infos.favoritated) {
-        options.innerHTML = `<svg viewBox='0 0 576 512' height='17.7px' width='19.7px'><path fill='gold' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg> ${opcoes.innerHTML}`;
+    if (infos.favorited) {
+        options.innerHTML = `<svg viewBox='0 0 576 512' height='17.7px' width='19.7px'><path fill='gold' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg> ${options.innerHTML}`;
     }
 
     const extraOptions = document.createElement("div");
@@ -301,7 +301,7 @@ function renderDrawing(infos) {
     }
 
     const favoritateBtn = document.createElement("button");
-    if (asideSelectedSection !== "favoritados" || !infos.favoritated) {
+    if (asideSelectedSection !== "favoritados" || !infos.favorited) {
         favoritateBtn.textContent = "Favoritar";
     } else {
         favoritateBtn.textContent = "Desfavoritar";
@@ -320,9 +320,9 @@ function renderDrawing(infos) {
     extraOptions.appendChild(favoritateBtn);
     favoritateBtn.addEventListener('click', function () {
         if(asideSelectedSection === "arquivados"){
-            sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favoritated: infos.favoritated, confirmed: window.confirm("Tem certeza? Favoritar este desenho também irá desarquivar-lo. (Se ele é tão importante para estar favoritado não deveria estar arquivado.)") });
+            sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favorited: infos.favorited, confirmed: window.confirm("Tem certeza? Favoritar este desenho também irá desarquivar-lo. (Se ele é tão importante para estar favoritado não deveria estar arquivado.)") });
         }else{
-            sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favoritated: infos.favoritated });
+            sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favorited: infos.favorited });
         }
     });
 
