@@ -319,7 +319,11 @@ function renderDrawing(infos) {
 
     extraOptions.appendChild(favoritateBtn);
     favoritateBtn.addEventListener('click', function () {
-        sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favoritated: infos.favoritated });
+        if(asideSelectedSection === "arquivados"){
+            sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favoritated: infos.favoritated, confirmed: window.confirm("Tem certeza? Favoritar este desenho também irá desarquivar-lo. (Se ele é tão importante para estar favoritado não deveria estar arquivado.)") });
+        }else{
+            sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favoritated: infos.favoritated });
+        }
     });
 
     // primeira opção
