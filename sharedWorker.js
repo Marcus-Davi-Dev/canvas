@@ -217,7 +217,7 @@ self.onconnect = (event) => {
                     console.log(`Ocorreu um error tentando favoritar o desenho ${msg.name}. Seção: ${msg.section}`, err);
                     port.postMessage({ type: "favoritate drawing", result: "error" });
                 }
-                if (msg.section === "arquivados" && msg.comfirmed) {
+                if (msg.section === "arquivados" && msg.confirmed) {
                     objectStores.objectStore("arquivados").delete(msg.name);
                     objectStores.objectStore("favoritados").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
                     const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
