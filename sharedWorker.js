@@ -114,7 +114,7 @@ self.onconnect = (event) => {
                             })
                         }
                         // obtem os desenhos que vão ser exibidos quando o usuário entrar no aplicativo.
-                        new Promise((resolve) => {
+                        await new Promise((resolve) => {
                             objectStores.objectStore("tudo").openCursor().onsuccess = (ev) => {
                                 const cursor = ev.target.result;
                                 if (cursor) {
