@@ -117,48 +117,48 @@ sharedWorker.port.onmessage = (ev) => {
         const title = document.createElement("h2");
         title.textContent = "Exportar desenho";
 
-        const opcao1 = document.createElement("div");
-        opcao1.classList.add("opcao");
+        const option1 = document.createElement("div");
+        option1.classList.add("option");
         const texto1 = document.createElement("div");
         const titulo1 = document.createElement("h3");
         titulo1.textContent = "PNG";
         const descricao1 = document.createElement("p");
         descricao1.textContent = "Formato PNG. Imagem sem fundo.";
 
-        const opcao2 = document.createElement("div");
-        opcao2.classList.add("opcao");
+        const option2 = document.createElement("div");
+        option2.classList.add("option");
         const texto2 = document.createElement("div");
         const titulo2 = document.createElement("h3");
         titulo2.textContent = "JPG";
         const descricao2 = document.createElement("p");
         descricao2.textContent = "Formato JPG. Imagem com fundo branco.";
 
-        opcao1.addEventListener("click", function(){
+        option1.addEventListener("click", function(){
             if(this.getAttribute("data-selected")){
                 this.removeAttribute("data-selected");
             }else{
                 this.setAttribute("data-selected", "true");
-                opcao2.removeAttribute("data-selected");
+                option2.removeAttribute("data-selected");
             }
         })
 
-        opcao2.addEventListener("click", function(){
+        option2.addEventListener("click", function(){
             if(this.getAttribute("data-selected")){
                 this.removeAttribute("data-selected");
             }else{
                 this.setAttribute("data-selected", "true");
-                opcao1.removeAttribute("data-selected");
+                option1.removeAttribute("data-selected");
             }
         })
 
         inputModal.appendChild(title);
-        inputModal.appendChild(opcao1);
-        opcao1.appendChild(texto1);
+        inputModal.appendChild(option1);
+        option1.appendChild(texto1);
         texto1.appendChild(titulo1);
         texto1.appendChild(descricao1);
 
-        inputModal.appendChild(opcao2);
-        opcao2.appendChild(texto2);
+        inputModal.appendChild(option2);
+        option2.appendChild(texto2);
         texto2.appendChild(titulo2);
         texto2.appendChild(descricao2);
 
@@ -172,8 +172,8 @@ sharedWorker.port.onmessage = (ev) => {
         });
         imgJPG.style.backgroundColor = "white"; // para simular uma imagem JPG com fundo branco
 
-        opcao1.appendChild(imgPNG);
-        opcao2.appendChild(imgJPG);
+        option1.appendChild(imgPNG);
+        option2.appendChild(imgJPG);
 
         // botões de confirmação e cancelamento da exportação.
         const confirmBtn = document.createElement("button");
@@ -187,7 +187,7 @@ sharedWorker.port.onmessage = (ev) => {
             const a = document.createElement("a");
             document.body.appendChild(a);
 
-            if (opcao1.getAttribute("data-selected")) { // img png
+            if (option1.getAttribute("data-selected")) { // img png
                 // usar typeof em um blob retorna 'object'
                 if (typeof msg.img === typeof {}) {
                     a.href = URL.createObjectURL(msg.img);
@@ -218,7 +218,7 @@ sharedWorker.port.onmessage = (ev) => {
                         }, 50);
                     })
                 }
-            } else if (opcao2.getAttribute("data-selected")) {
+            } else if (option2.getAttribute("data-selected")) {
                 const img = new Image();
                 // usar typeof em um blob retorna 'object'
                 if(typeof msg.img === typeof {}){
