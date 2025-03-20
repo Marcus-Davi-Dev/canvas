@@ -454,13 +454,14 @@ newDrawingBtn.addEventListener('click', function () {
 // navegação entre seções.
 for (let i = 0; i < asideSections.length; i++) {
     asideSections[i].addEventListener('click', function () {
-        asideSelectedSection = asideSections[i].children[0].textContent[0].toLowerCase() + asideSections[i].children[0].textContent.substring(1);
+        if(asideSelectedSection === this.children[0].textContent.toLowerCase()) return;
+        asideSelectedSection = this.children[0].textContent.toLowerCase();
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         sharedWorker.port.postMessage({ type: "render section", section: asideSelectedSection });
         for (let j = 0; j < asideSections.length; j++) {
             asideSections[j].setAttribute("aria-selected", "false");
         }
-        asideSections[i].setAttribute("aria-selected", "true");
+        this.setAttribute("aria-selected", "true");
     })
 }
 searchBtn.addEventListener('click', function (ev) {
