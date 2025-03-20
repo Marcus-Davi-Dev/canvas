@@ -368,7 +368,7 @@ function renderDrawing(infos) {
     drawing.appendChild(extraOptions);
 
     // remove os textos de "nenhum desenho" e a quebra de linha quando um desenho for renderizado
-    if(drawings.children[0].tagName === "BR"){
+    if(drawings.children[0]?.tagName === "BR"){
         drawings.childNodes[0].remove();
         drawings.childNodes[0].remove();
         drawings.childNodes[0].remove();
