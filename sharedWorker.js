@@ -1,4 +1,3 @@
-debugger;
 let db;
 // flag para garantir que o código de procura pelas databases em busca pela
 // nossa só seja executada se o banco de dados não tenha sido criado dessa vez.
@@ -46,7 +45,6 @@ self.onconnect = (event) => {
     console.log("SharedWorker: shared worker connected.", event);
     const port = event.ports[0];
 
-    debugger;
     let request = indexedDB.open("canvas", 1);
     request.onupgradeneeded = (ev) => {
         console.log("SharedWorker: database created.");

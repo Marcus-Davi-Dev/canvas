@@ -133,6 +133,24 @@ sharedWorker.port.onmessage = (ev) => {
         const descricao2 = document.createElement("p");
         descricao2.textContent = "Formato JPG. Imagem com fundo branco.";
 
+        opcao1.addEventListener("click", function(){
+            if(this.getAttribute("data-selected")){
+                this.removeAttribute("data-selected");
+            }else{
+                this.setAttribute("data-selected", "true");
+                opcao2.removeAttribute("data-selected");
+            }
+        })
+
+        opcao2.addEventListener("click", function(){
+            if(this.getAttribute("data-selected")){
+                this.removeAttribute("data-selected");
+            }else{
+                this.setAttribute("data-selected", "true");
+                opcao1.removeAttribute("data-selected");
+            }
+        })
+
         inputModal.appendChild(title);
         inputModal.appendChild(opcao1);
         opcao1.appendChild(texto1);
@@ -146,9 +164,12 @@ sharedWorker.port.onmessage = (ev) => {
 
         // imagens de demonstração
         const imgPNG = document.createElement("img");
-        imgPNG.src = msg.img;
+        imgPNG.src = URL.createObjectURL(msg.img);
         const imgJPG = document.createElement("img");
-        imgJPG.src = msg.img;
+        imgJPG.src = imgPNG.src;
+        imgJPG.addEventListener("load", function(){
+            URL.revokeObjectURL(imgJPG.src);
+        });
         imgJPG.style.backgroundColor = "white"; // para simular uma imagem JPG com fundo branco
 
         opcao1.appendChild(imgPNG);
@@ -156,7 +177,9 @@ sharedWorker.port.onmessage = (ev) => {
 
         // botões de confirmação e cancelamento da exportação.
         const confirmBtn = document.createElement("button");
+        confirmBtn.textContent = "OK";
         const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Cancelar";
         cancelBtn.onclick = function () { inputModal.close() };
         confirmBtn.onclick = function () {
             let url;
@@ -165,7 +188,8 @@ sharedWorker.port.onmessage = (ev) => {
             document.body.appendChild(a);
 
             if (opcao1.getAttribute("data-selected")) { // img png
-                if (typeof msg.img === Blob) {
+                // usar typeof em um blob retorna 'object'
+                if (typeof msg.img === typeof {}) {
                     a.href = URL.createObjectURL(msg.img);
                     url = a.href;
                     a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
@@ -196,7 +220,8 @@ sharedWorker.port.onmessage = (ev) => {
                 }
             } else if (opcao2.getAttribute("data-selected")) {
                 const img = new Image();
-                if(typeof msg.img === Blob){
+                // usar typeof em um blob retorna 'object'
+                if(typeof msg.img === typeof {}){
                     url = URL.createObjectURL(msg.img);
                     img.src = url;
                 }else{
@@ -234,6 +259,9 @@ sharedWorker.port.onmessage = (ev) => {
                 })
             }
         }
+
+        inputModal.appendChild(cancelBtn);
+        inputModal.appendChild(confirmBtn);
     }else if(msg.type === "search drawings"){
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         for(let i = 0; i < msg.drawings.length; i++){
