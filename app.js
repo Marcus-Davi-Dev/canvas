@@ -303,7 +303,7 @@ function renderDrawing(infos) {
     })
     img.src = URL.createObjectURL(infos.img);
     img.onload = function(){
-        URL.revokeObjectURL(infos.img);
+        URL.revokeObjectURL(img.src);
     }
     img.style.width = "100%";
     img.style.height = "78%";
