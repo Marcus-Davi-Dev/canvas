@@ -286,7 +286,12 @@ self.onconnect = (event) => {
             }
         }
         else if (msg.type === "get drawing") {
-            return (await Drawing.searchDrawing(msg.name, msg.section)).img;
+            const drawing = await Drawing.searchDrawing(msg.name, msg.section);
+            if(drawing){
+                port.postMessage({type: "get drawing", result: "success", img: drawing.img});
+            }else{
+                port.postMessage({type: "get drawing", result: "error", img: null, errorMsg: "Desenho não encontrado"});
+            }
         } else if (msg.type === "update drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
 
