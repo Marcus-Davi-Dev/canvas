@@ -844,6 +844,7 @@ closeCanvasBtn.addEventListener('click', function () {
     saveLinkWrraper.addEventListener('click', function () {
         sharedWorker.port.postMessage({ type: "update drawing", name: (URL.parse(window.location)).searchParams.get("drawing"), section: (URL.parse(window.location)).searchParams.get("section") });
     })
+    saveBtn.appendChild(saveLinkWrraper);
 
     const doNotSaveBtn = document.createElement("button");
     const doNotSaveLinkWrraper = document.createElement("a");
