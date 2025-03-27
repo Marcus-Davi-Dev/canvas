@@ -842,7 +842,9 @@ closeCanvasBtn.addEventListener('click', function () {
     saveLinkWrraper.href = "index.html";
     saveLinkWrraper.textContent = "Salvar";
     saveLinkWrraper.addEventListener('click', function () {
-        sharedWorker.port.postMessage({ type: "update drawing", name: (URL.parse(window.location)).searchParams.get("drawing"), section: (URL.parse(window.location)).searchParams.get("section") });
+        canvas.toBlob((blob)=>{   
+            sharedWorker.port.postMessage({ type: "update drawing", name: (URL.parse(window.location)).searchParams.get("drawing"), section: (URL.parse(window.location)).searchParams.get("section"), img: blob });
+        });
     })
     saveBtn.appendChild(saveLinkWrraper);
 
