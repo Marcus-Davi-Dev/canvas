@@ -295,18 +295,17 @@ function renderDrawing(infos) {
     const drawing = document.createElement("div");
     drawing.classList.add("drawing");
 
+    const a = document.createElement("a");
+    a.href = `canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
     const img = document.createElement("img");
-    img.addEventListener('click', function(){
-        const a = document.createElement("a");
-        a.src = `canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
-        a.click();
-    })
     img.src = URL.createObjectURL(infos.img);
     img.onload = function(){
         URL.revokeObjectURL(img.src);
     }
     img.style.width = "100%";
     img.style.height = "78%";
+
+    a.appendChild(img);
 
     const info = document.createElement("div");
     info.classList.add("info");
@@ -362,7 +361,7 @@ function renderDrawing(infos) {
         sharedWorker.port.postMessage({ type: "delete drawing", name: infos.name, section: asideSelectedSection });
     })
 
-    drawing.appendChild(img);
+    drawing.appendChild(a);
     drawing.appendChild(info);
     info.appendChild(options);
     drawing.appendChild(extraOptions);
