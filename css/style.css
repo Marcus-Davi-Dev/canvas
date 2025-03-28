@@ -195,7 +195,7 @@ header .entity {
     flex-direction: column;
 }
 
-#drawings>.drawing>img {
+#drawings>.drawing>a>img {
     border-radius: 6px 6px 0 0;
     max-height: 73px;
 }
