@@ -228,35 +228,37 @@ sharedWorker.port.onmessage = (ev) => {
                     img.src = msg.img;
                 }
                 document.body.appendChild(img);
-                const canvas = document.createElement("canvas");
-                canvas.height = img.height;
-                canvas.width = img.width;
-                img.remove();
-                const ctx = canvas.getContext("2d");
-                // fazer a imagem ter fundo branco.
-                ctx.moveTo(0, 0);
-                ctx.lineTo(0, canvas.height);
-                ctx.lineTo(canvas.width, canvas.height);
-                ctx.lineTo(canvas.width, 0);
-                ctx.lineTo(0, 0);
-                ctx.fillStyle = "white";
-                ctx.fill();
-                
-                ctx.drawImage(img, 0, 0);
-                if(url){
-                    URL.revokeObjectURL(url);
-                }
-                canvas.toBlob((blob)=>{
-                    url = URL.createObjectURL(blob);
-                    a.href = url;
-                    a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
-                    a.download = msg.name;
-                    a.click();
-                    setTimeout(function(){
-                        a.remove();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    canvas.height = img.height;
+                    canvas.width = img.width;
+                    img.remove();
+                    const ctx = canvas.getContext("2d");
+                    // fazer a imagem ter fundo branco.
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, canvas.height);
+                    ctx.lineTo(canvas.width, canvas.height);
+                    ctx.lineTo(canvas.width, 0);
+                    ctx.lineTo(0, 0);
+                    ctx.fillStyle = "white";
+                    ctx.fill();
+                    
+                    ctx.drawImage(img, 0, 0);
+                    if(url){
                         URL.revokeObjectURL(url);
+                    }
+                    canvas.toBlob((blob)=>{
+                        url = URL.createObjectURL(blob);
+                        a.href = url;
+                        a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
+                        a.download = msg.name;
+                        a.click();
+                        setTimeout(function(){
+                            a.remove();
+                            URL.revokeObjectURL(url);
+                        });
                     });
-                })
+                }
             }
         }
 
