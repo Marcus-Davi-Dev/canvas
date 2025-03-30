@@ -227,12 +227,14 @@ div[popover] {
     background-color: var(--primary-background-color);
     border: none;
     color: var(--primary-font-color);
+    border-radius: 4px;
 }
 
 div[popover]:popover-open {
     display: flex;
     flex-direction: column;
     gap: 7px;
+    box-shadow: black 0 0 20px 2px;
 }
 
 dialog {
@@ -274,11 +276,14 @@ dialog .option {
     display: flex;
     justify-content: space-between;
     margin: 0 0 20px 0;
+    border-radius: 4px;
+    transition: all .3s;
 }
 
 dialog .option img {
     max-width: 20%;
     min-width: 80px;
+    border-radius: 7px;
 }
 
 dialog .option:last-of-type {
