@@ -276,6 +276,11 @@ dialog .option {
     margin: 0 0 20px 0;
 }
 
+dialog .option img {
+    max-width: 20%;
+    min-width: 80px;
+}
+
 dialog .option:last-of-type {
     margin: 0;
 }
