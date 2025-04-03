@@ -10,6 +10,8 @@ const more = header.querySelector("#more");
 const configBtn = document.querySelector("#configBtn");
 const closeConfigMenuBtn = document.querySelector("#close-config-menu");
 const configMenu = document.querySelector("#config-menu");
+const drawingsCounterCheckbox = document.querySelector("#config-menu input[aria-describedby='config-description-1']");
+const themeSelector = document.querySelector("#config-menu select");
 
 const aside = document.querySelector("aside");
 let asideClosed = true;
@@ -490,6 +492,10 @@ more.addEventListener('click', function () {
 
 closeConfigMenuBtn.addEventListener('click', hideConfigMenu);
 configBtn.addEventListener('click', showConfigMenu);
+drawingsCounterCheckbox.addEventListener('click', toggleDrawingsCounter);
+themeSelector.addEventListener('change', function(){
+    changeTheme(this.value);
+})
 
 function showConfigMenu() {
     asideSections[0].parentNode.classList.add("hidden");
@@ -513,5 +519,46 @@ function updateDrawingsMenuPosition() {
     for (const menu of document.querySelectorAll("div.drawing > div[popover]")) {
         menu.style.marginLeft = `${menu.parentElement.getBoundingClientRect().x + menu.parentElement.getBoundingClientRect().width}px`;
         menu.style.marginTop = `${menu.parentElement.getBoundingClientRect().y + 10}px`;
+    }
+}
+
+function changeTheme(newTheme){
+    switch (newTheme) {
+        case "Automático":
+            document.documentElement.classList.remove("light");
+            document.documentElement.classList.remove("dark");
+            break;
+        case "Escuro":
+            document.documentElement.classList.remove("light");
+            document.documentElement.classList.add("dark");
+            break;
+        case "Claro":
+            document.documentElement.classList.add("light");
+            document.documentElement.classList.remove("dark");
+            break;
+    }
+}
+
+function toggleDrawingsCounter(){
+    if (asideSections[0].children[1].classList.contains("hidden")) {
+        for (let i = 0; i < asideSections.length; i++) {
+            asideSections[i].children[1].classList.remove("hidden");
+        }
+        document.documentElement.style.setProperty("--aside-width", asideExtendedWidth);
+        aside.setAttribute("data-width", asideExtendedWidth);
+        for (let i = 0; i < asideSections.length; i++) {
+            // só para saber o getBoundigClientRect().x e depois re-esconder
+            asideSections[i].parentNode.classList.remove("hidden");
+            // pega a distância do contador desenhos da esquerda e aplica ela como margem.
+            asideSections[i].children[1].style.marginLeft = `${100 - asideSections[i].children[1].getBoundingClientRect().x}px`;
+            asideSections[i].parentNode.classList.add("hidden");
+        }
+    } else {
+        for (let i = 0; i < asideSections.length; i++) {
+            asideSections[i].children[1].classList.add("hidden");
+            asideSections[i].children[1].style.marginLeft = "";
+        }
+        document.documentElement.style.setProperty("--aside-width", asideNormalWidth);
+        aside.setAttribute("data-width", asideNormalWidth);
     }
 }
