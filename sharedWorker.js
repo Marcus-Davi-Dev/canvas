@@ -153,7 +153,7 @@ self.onconnect = (event) => {
                 });
             } else {
                 console.log(`SharedWorker: drawing created with name ${msg.name}.`);
-                const imgBlob = await Drawing.stringImgToBlob("imagens/imagem_branca.png");
+                const imgBlob = await Drawing.stringImgToBlob("https://marcus-davi-dev.github.io/canvas/imagens/imagem_branca.png");
                 if (msg.section === "favoritados") {
                     const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
                     objectStores.objectStore("favoritados").add(name, imgBlob, true);
