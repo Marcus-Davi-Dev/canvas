@@ -56,8 +56,10 @@ async function createSharedWorker(scriptURL){
             set: function(target, property, value){
                 if(property !== "port"){
                     Reflect.set(target.port, property, value);
+                    return true;
                 }else{
                     Reflect.set(target, property, value);
+                    return true;
                 }
             }
         });
