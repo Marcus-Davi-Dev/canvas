@@ -156,8 +156,8 @@ self.onconnect = (event) => {
                 const imgBlob = await Drawing.stringImgToBlob("https://marcus-davi-dev.github.io/canvas/imagens/imagem_branca.png");
                 if (msg.section === "favoritados") {
                     const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
-                    objectStores.objectStore("favoritados").add(name, imgBlob, true);
-                    objectStores.objectStore("tudo").add(name, imgBlob, true);
+                    objectStores.objectStore("favoritados").add(Drawing.create(name, imgBlob, true));
+                    objectStores.objectStore("tudo").add(Drawing.create(name, imgBlob, true));
                 } else {
                     db.transaction([msg.section], "readwrite").objectStore(msg.section).add(Drawing.create(name, imgBlob, false));
                 }
@@ -173,6 +173,7 @@ self.onconnect = (event) => {
             }
         }
         else if (msg.type === "delete drawing") {
+            // se o desenho está favoritado
             if ((await Drawing.searchDrawing(msg.name, msg.section)).favorited) {
                 const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
                 objectStores.onerror = (err) => {
@@ -182,7 +183,7 @@ self.onconnect = (event) => {
                 objectStores.objectStore("favoritados").delete(msg.name);
                 const secaoTudoDeleteRequest = objectStores.objectStore("tudo").delete(msg.name);
                 secaoTudoDeleteRequest.onsuccess = () => {
-                    port.postMessage({ type: "delete drawing", result: "success", name: msg.name });
+                    port.postMessage({ type: "delete drawing", result: "success", name: msg.name, favorited: true });
                 }
             } else {
                 const deleteRequest = db.transaction([msg.section], "readwrite").objectStore(msg.section).delete(msg.name);
@@ -191,7 +192,7 @@ self.onconnect = (event) => {
                     port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentando excluir o desenho ${msg.name}.` });
                 }
                 deleteRequest.onsuccess = () => {
-                    port.postMessage({ type: "delete drawing", result: "success", name: msg.name });
+                    port.postMessage({ type: "delete drawing", result: "success", name: msg.name, favorited: false });
                 }
             }
         }
@@ -255,19 +256,19 @@ self.onconnect = (event) => {
                     objectStores.objectStore("favoritados").delete(msg.name);
                     const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     secaoArquivadosAddRequest.onsuccess = () => {
-                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: true });
+                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: true, section: msg.section });
                     }
                 } else if(msg.section === "tudo"){
                     objectStores.objectStore("tudo").delete(msg.name);
                     const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     secaoArquivadosAddRequest.onsuccess = () => {
-                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: true });
+                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: false, section: msg.section });
                     }
                 }else {
                     objectStores.objectStore("arquivados").delete(msg.name);
                     const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     secaoTudoAddRequest.onsuccess = () => {
-                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: false });
+                        port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: false, section: msg.section });
                     }
                 }
             } else {
@@ -330,8 +331,8 @@ self.onconnect = (event) => {
                     return;
                 }
                 port.postMessage({ type: "search drawings", result: "success", drawings: filteredDrawings });
+                console.log(`SharedWorker: drawings on ${msg.section} filtered. Result: ${filteredDrawings}.`);
             }
-            console.log(`SharedWorker: drawings on ${msg.section} filtered. Result: ${filteredDrawings}.`);
         }
     }
 }

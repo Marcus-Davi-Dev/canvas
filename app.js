@@ -24,10 +24,10 @@ const asideExtendedWidth = "133px";
 // tamanho com o menu de configuração aberto
 const asideExtendedPlusWidth = "200px";
 
-async function createSharedWorker(scriptURL){
-    if("SharedWorker" in window){
+async function createSharedWorker(scriptURL) {
+    if ("SharedWorker" in window) {
         return new SharedWorker(scriptURL);
-    }else{
+    } else {
         let scriptContent = await (await fetch(scriptURL)).text();
         // removendo código específico de SharedWorker para poder ser usado em um Dedicated Worker.
         scriptContent = scriptContent.replaceAll("const port = event.ports[0]", "");
@@ -37,8 +37,8 @@ async function createSharedWorker(scriptURL){
         scriptContent = scriptContent.split("");
         scriptContent[scriptContent.lastIndexOf("}")] = "";
         scriptContent = scriptContent.join("");
-        let url = URL.createObjectURL(new Blob([scriptContent], {type: "text/javascript"}));
-        const fakeSharedWorker = new function(){
+        let url = URL.createObjectURL(new Blob([scriptContent], { type: "text/javascript" }));
+        const fakeSharedWorker = new function () {
             this.port = new Worker(url);
             this.onerror = this.port.onerror;
             this.addEventListener = this.port.addEventListener;
@@ -46,18 +46,18 @@ async function createSharedWorker(scriptURL){
             this.dispatchEvent = this.port.dispatchEvent;
         }
         return new Proxy(fakeSharedWorker, {
-            get: function(target, property){
-                if(property !== "port"){
+            get: function (target, property) {
+                if (property !== "port") {
                     return Reflect.get(target.port, property);
-                }else{
+                } else {
                     return Reflect.get(target, property);
                 }
             },
-            set: function(target, property, value){
-                if(property !== "port"){
+            set: function (target, property, value) {
+                if (property !== "port") {
                     Reflect.set(target.port, property, value);
                     return true;
-                }else{
+                } else {
                     Reflect.set(target, property, value);
                     return true;
                 }
@@ -84,7 +84,12 @@ sharedWorker.port.onmessage = (ev) => {
                 inputModal.querySelector("#aviso-input-invalido").remove();
             }
             // atualiza o contador de desenhos da seção em que o desenho foi criado.
-            asideSections[["tudo", "favoritados", "arquivados"].indexOf(asideSelectedSection)].children[1].textContent = +asideSections[["tudo", "favoritados", "arquivados"].indexOf(asideSelectedSection)].children[1].textContent + 1;
+            if(msg.drawing.favorited){
+                incrementDrawingCounter("tudo", 1);
+                incrementDrawingCounter("favoritados", 1);
+            }else{
+                incrementDrawingCounter(asideSelectedSection, 1);
+            }
         } else {
             const advice = document.createElement("span");
             advice.innerHTML = `<br> ${msg.errorMsg} <br>`;
@@ -95,19 +100,16 @@ sharedWorker.port.onmessage = (ev) => {
         }
     }
     else if (msg.type === "delete drawing") {
-        if (msg.result === "success") {
-            // busca pelo desenho que foi excluído para remover ele da tela.
-            for (let i = 0; i < drawings.children.length; i++) {
-                if (drawings.children[i].children[1].children[0].textContent === msg.name) {
-                    drawings.children[i].remove();
-                    break;
-                }
-            }
-            if(!drawings.children.length){
-                drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
-            }
-        } else {
+        if (msg.result !== "success") {
             alert(msg.errorMsg);
+            return;
+        }
+
+        if(msg.favorited){
+            decrementDrawingCounter("tudo", 1);
+            decrementDrawingCounter("favoritados", 1);
+        }else{
+            decrementDrawingCounter(asideSelectedSection, 1);
         }
     }
     else if (msg.type === "render section") {
@@ -116,42 +118,57 @@ sharedWorker.port.onmessage = (ev) => {
         }
     }
     else if (msg.type === "favoritate drawing") {
+        // favoritar desenho na seção 'tudo'.
         if (msg.result === "success" && msg.section === "tudo" && msg.favorited) {
             for (let i = 0; i < drawings.children.length; i++) {
                 if (drawings.children[i].querySelector(".info").children[0].textContent === msg.name) {
+                    // adiciona uma estrela para indicar que está favoritado.
                     drawings.children[i].querySelector(".options").innerHTML = `<svg viewBox='0 0 576 512' height='17.7px' width='19.7px'><path fill='gold' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg> ${drawings.children[i].children[1].children[1].innerHTML}`;
                     drawings.children[i].querySelector("[popover]").children[2].textContent = "Desfavoritar";
                 }
             }
+            incrementDrawingCounter("favoritados", 1);
+            // desfavoritar desenho na seção 'tudo'.
         } else if (msg.result === "success" && msg.section === "tudo" && !msg.favorited) {
             for (let i = 0; i < drawings.children.length; i++) {
                 if (drawings.children[i].querySelector(".info").children[0].textContent === msg.name) {
-                    drawings.children[i].querySelector(".options").children[0].remove();
+                    drawings.children[i].querySelector(".options").children[0].remove(); // remove a estrela de favoritado.
                     drawings.children[i].querySelector("[popover]").children[2].textContent = "Favoritar";
                 }
             }
-        } else if (msg.result === "success" && (msg.section === "favoritados" || msg.section === "arquivados")) {
-            for (let i = 0; i < drawings.children.length; i++) {
-                if (drawings.children[i].querySelector(".info").children[0].textContent === msg.name) {
-                    drawings.children[i].remove();
-                }
-            }
+            decrementDrawingCounter("favoritados", 1);
+            // desfavoritar desenho na seção 'favoritados'.
+        } else if (msg.result === "success" && msg.section === "favoritados") {
+            removeDrawing(msg.name);
+            decrementDrawingCounter("favoritados", 1);
+            // favoritar desenho na seção 'arquivados'.
+        } else if (msg.result === "success" && msg.section === "arquivados") {
+            removeDrawing(msg.name);
+            decrementDrawingCounter("arquivados", 1);
+            incrementDrawingCounter("favoritados", 1);
+            incrementDrawingCounter("tudo", 1);
         }
     }
     else if (msg.type === "archive drawing") {
-        if(msg.result === "error"){
+        if (msg.result === "error") {
             alert(msg.errorMsg);
+            return;
         }
-        for (let i = 0; i < drawings.children.length; i++) {
-            if (drawings.children[i].children[1].children[1].textContent === msg.name) {
-                drawings.children[i].remove();
-            }
+
+        if (msg.favorited || msg.section === "favoritados") {
+            incrementDrawingCounter("arquivados", 1);
+            decrementDrawingCounter("favoritados", 1);
+            decrementDrawingCounter("tudo", 1);
+            removeDrawing(msg.name);
+        } else if (msg.section === "tudo") {
+            incrementDrawingCounter("arquivados", 1);
+            decrementDrawingCounter("tudo", 1);
+            removeDrawing(msg.name);
+        }else{
+            decrementDrawingCounter("arquivados", 1);
+            incrementDrawingCounter("tudo", 1);
+            removeDrawing(msg.name);
         }
-        asideSections[0].children[1].textContent = +asideSections[0].children[1].textContent - 1;
-        if (msg.favorited) {
-            asideSections[1].children[1].textContent = +asideSections[1].children[1].textContent - 1;
-        }
-        asideSections[2].children[1].textContent = +asideSections[2].children[1].textContent + 1;
     }
     else if (msg.type === "export drawing") {
         inputModal.showModal();
@@ -177,19 +194,19 @@ sharedWorker.port.onmessage = (ev) => {
         const descricao2 = document.createElement("p");
         descricao2.textContent = "Formato JPG. Imagem com fundo branco.";
 
-        option1.addEventListener("click", function(){
-            if(this.getAttribute("data-selected")){
+        option1.addEventListener("click", function () {
+            if (this.getAttribute("data-selected")) {
                 this.removeAttribute("data-selected");
-            }else{
+            } else {
                 this.setAttribute("data-selected", "true");
                 option2.removeAttribute("data-selected");
             }
         })
 
-        option2.addEventListener("click", function(){
-            if(this.getAttribute("data-selected")){
+        option2.addEventListener("click", function () {
+            if (this.getAttribute("data-selected")) {
                 this.removeAttribute("data-selected");
-            }else{
+            } else {
                 this.setAttribute("data-selected", "true");
                 option1.removeAttribute("data-selected");
             }
@@ -211,7 +228,7 @@ sharedWorker.port.onmessage = (ev) => {
         imgPNG.src = URL.createObjectURL(msg.img);
         const imgJPG = document.createElement("img");
         imgJPG.src = imgPNG.src;
-        imgJPG.addEventListener("load", function(){
+        imgJPG.addEventListener("load", function () {
             URL.revokeObjectURL(imgJPG.src);
         });
         imgJPG.style.backgroundColor = "white"; // para simular uma imagem JPG com fundo branco
@@ -265,10 +282,10 @@ sharedWorker.port.onmessage = (ev) => {
             } else if (option2.getAttribute("data-selected")) {
                 const img = new Image();
                 // usar typeof em um blob retorna 'object'
-                if(typeof msg.img === typeof {}){
+                if (typeof msg.img === typeof {}) {
                     url = URL.createObjectURL(msg.img);
                     img.src = url;
-                }else{
+                } else {
                     img.src = msg.img;
                 }
                 document.body.appendChild(img);
@@ -286,18 +303,18 @@ sharedWorker.port.onmessage = (ev) => {
                     ctx.lineTo(0, 0);
                     ctx.fillStyle = "white";
                     ctx.fill();
-                    
+
                     ctx.drawImage(img, 0, 0);
-                    if(url){
+                    if (url) {
                         URL.revokeObjectURL(url);
                     }
-                    canvas.toBlob((blob)=>{
+                    canvas.toBlob((blob) => {
                         url = URL.createObjectURL(blob);
                         a.href = url;
                         a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
                         a.download = msg.name;
                         a.click();
-                        setTimeout(function(){
+                        setTimeout(function () {
                             a.remove();
                             URL.revokeObjectURL(url);
                         });
@@ -308,12 +325,12 @@ sharedWorker.port.onmessage = (ev) => {
 
         inputModal.appendChild(cancelBtn);
         inputModal.appendChild(confirmBtn);
-    }else if(msg.type === "search drawings"){
+    } else if (msg.type === "search drawings") {
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
-        for(let i = 0; i < msg.drawings.length; i++){
-            renderDrawing({name: msg.drawings[i].name, img: msg.drawings[i].img, favorited: msg.drawings[i].favorited});
+        for (let i = 0; i < msg.drawings.length; i++) {
+            renderDrawing({ name: msg.drawings[i].name, img: msg.drawings[i].img, favorited: msg.drawings[i].favorited });
         }
-    }else if (msg.type === "init app") {
+    } else if (msg.type === "init app") {
         if (msg.drawings.length === 0) {
             drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
             asideSections[0].children[1].textContent = "0";
@@ -327,7 +344,7 @@ sharedWorker.port.onmessage = (ev) => {
             asideSections[1].children[1].textContent = msg.SectionFavoritadosDrawingAmount;
             asideSections[2].children[1].textContent = msg.SectionArquivadosDrawingAmount;
         }
-    }else if(msg.type === "DBerror"){
+    } else if (msg.type === "DBerror") {
         alert("Ocorreu um erro no banco de dados, tente recarregar a página");
     }
 }
@@ -345,7 +362,7 @@ function renderDrawing(infos) {
     a.href = `canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
     const img = document.createElement("img");
     img.src = URL.createObjectURL(infos.img);
-    img.onload = function(){
+    img.onload = function () {
         URL.revokeObjectURL(img.src);
     }
     img.style.width = "100%";
@@ -395,16 +412,16 @@ function renderDrawing(infos) {
 
     extraOptions.appendChild(favoritateBtn);
     favoritateBtn.addEventListener('click', function () {
-        if(asideSelectedSection === "arquivados"){
+        if (asideSelectedSection === "arquivados") {
             sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favorited: infos.favorited, confirmed: window.confirm("Tem certeza? Favoritar este desenho também irá desarquivar-lo. (Se ele é tão importante para estar favoritado não deveria estar arquivado.)") });
-        }else{
+        } else {
             sharedWorker.port.postMessage({ type: "favoritate drawing", name: info.querySelector("span").textContent, section: asideSelectedSection, favorited: infos.favorited });
         }
     });
 
     // primeira opção
     options.querySelectorAll("button")[0].addEventListener('click', function () {
-        sharedWorker.port.postMessage({ type: "delete drawing", name: infos.name, section: asideSelectedSection });
+        deleteDrawing(infos.name, asideSelectedSection);
     })
 
     drawing.appendChild(a);
@@ -413,7 +430,7 @@ function renderDrawing(infos) {
     drawing.appendChild(extraOptions);
 
     // remove os textos de "nenhum desenho" e a quebra de linha quando um desenho for renderizado
-    if(drawings.children[0]?.tagName === "BR"){
+    if (drawings.children[0]?.tagName === "BR") {
         drawings.childNodes[0].remove();
         drawings.childNodes[0].remove();
         drawings.childNodes[0].remove();
@@ -499,7 +516,7 @@ newDrawingBtn.addEventListener('click', function () {
 // navegação entre seções.
 for (let i = 0; i < asideSections.length; i++) {
     asideSections[i].addEventListener('click', function () {
-        if(asideSelectedSection === this.children[0].textContent.toLowerCase()) return;
+        if (asideSelectedSection === this.children[0].textContent.toLowerCase()) return;
         asideSelectedSection = this.children[0].textContent.toLowerCase();
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         sharedWorker.port.postMessage({ type: "render section", section: asideSelectedSection });
@@ -511,7 +528,7 @@ for (let i = 0; i < asideSections.length; i++) {
 }
 searchBtn.addEventListener('click', function (ev) {
     ev.preventDefault();
-    sharedWorker.port.postMessage({type: "search drawings", section: asideSelectedSection, search: searchInput.value});
+    sharedWorker.port.postMessage({ type: "search drawings", section: asideSelectedSection, search: searchInput.value });
 })
 
 window.onresize = updateDrawingsMenuPosition;
@@ -535,7 +552,7 @@ more.addEventListener('click', function () {
 closeConfigMenuBtn.addEventListener('click', hideConfigMenu);
 configBtn.addEventListener('click', showConfigMenu);
 drawingsCounterCheckbox.addEventListener('click', toggleDrawingsCounter);
-themeSelector.addEventListener('change', function(){
+themeSelector.addEventListener('change', function () {
     changeTheme(this.value);
 })
 
@@ -557,6 +574,9 @@ function hideConfigMenu() {
     document.documentElement.style.setProperty("--aside-width", aside.getAttribute("data-width"));
 }
 
+/**
+ * Atualiza a posição dos menus flutuantes dos desenhos.
+ */
 function updateDrawingsMenuPosition() {
     for (const menu of document.querySelectorAll("div.drawing > div[popover]")) {
         menu.style.marginLeft = `${menu.parentElement.getBoundingClientRect().x + menu.parentElement.getBoundingClientRect().width}px`;
@@ -564,7 +584,7 @@ function updateDrawingsMenuPosition() {
     }
 }
 
-function changeTheme(newTheme){
+function changeTheme(newTheme) {
     switch (newTheme) {
         case "Automático":
             document.documentElement.classList.remove("light");
@@ -581,7 +601,7 @@ function changeTheme(newTheme){
     }
 }
 
-function toggleDrawingsCounter(){
+function toggleDrawingsCounter() {
     if (asideSections[0].children[1].classList.contains("hidden")) {
         for (let i = 0; i < asideSections.length; i++) {
             asideSections[i].children[1].classList.remove("hidden");
@@ -603,4 +623,65 @@ function toggleDrawingsCounter(){
         document.documentElement.style.setProperty("--aside-width", asideNormalWidth);
         aside.setAttribute("data-width", asideNormalWidth);
     }
+}
+
+/**
+ * Aumenta a contagem de desenhos de uma seção.
+ * @param {String} section nome da seção.
+ * @param {Number} amount o quanto será aumentado.
+ */
+function incrementDrawingCounter(section, amount = 1) {
+    for (let i = 0; i < asideSections.length; i++) {
+        if (asideSections[i].querySelector("button").textContent.toLowerCase() === section.toLowerCase()) {
+            // transforma o texto do contador em um número e incrementa a quantidade passada.
+            asideSections[i].querySelector("span.section-drawings-counter").textContent = parseInt(asideSections[i].querySelector("span.section-drawings-counter").textContent) + amount;
+            // encerra o loop e retorna.
+            return;
+        }
+    }
+}
+
+/**
+ * Diminui a contagem de desenhos de uma seção.
+ * @param {String} section nome da seção.
+ * @param {Number} amount o quanto será diminuído.
+ */
+function decrementDrawingCounter(section, amount = 1) {
+    for (let i = 0; i < asideSections.length; i++) {
+        if (asideSections[i].querySelector("button").textContent.toLowerCase() === section.toLowerCase()) {
+            // transforma o texto do contador em um número e incrementa a quantidade passada.
+            asideSections[i].querySelector("span.section-drawings-counter").textContent = parseInt(asideSections[i].querySelector("span.section-drawings-counter").textContent) - amount;
+            // encerra o loop e retorna.
+            return;
+        }
+    }
+}
+
+/**
+ * Remove um desenho da tela.
+ * @param {String} name nome do desenho.
+ */
+function removeDrawing(name) {
+    // busca o desenho para removê-lo da tela.
+    for (let i = 0; i < drawings.children.length; i++) {
+        if (drawings.children[i].querySelector(".info span").textContent === name) {
+            drawings.children[i].remove();
+        }
+    }
+
+    if (drawings.children.length === 0) {
+        drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
+    }
+}
+
+/**
+ * Exclui um desenho e o remove da tela.
+ * @param {String} name nome do desenho.
+ * @param {String} section seção à qual o desenho pertence.
+ */
+function deleteDrawing(name, section) {
+    sharedWorker.port.postMessage({ type: "delete drawing", name: name, section: section });
+    removeDrawing(name);
+    // deve ser feito no onmessage do Shared Worker.
+    // decrementDrawingCounter(section, 1);
 }
