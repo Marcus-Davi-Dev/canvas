@@ -326,7 +326,7 @@ self.onconnect = (event) => {
             objectStore.openCursor(IDBKeyRange.lowerBound(msg.search)).onsuccess = (ev) => {
                 const cursor = ev.target.result;
                 if (cursor) {
-                    filteredDrawings.push({ name: cursor.value.nome, img: cursor.value.img });
+                    filteredDrawings.push({ name: cursor.value.name, img: cursor.value.img });
                     cursor.continue();
                     return;
                 }
