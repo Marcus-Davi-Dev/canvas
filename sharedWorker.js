@@ -71,7 +71,14 @@ self.onconnect = (event) => {
         arquivadosObjStr.createIndex("name", "name", { unique: true });
         arquivadosObjStr.createIndex("criacao", "criacao", { unique: false });
 
-        port.postMessage({ type: "init app", drawings: [], SectionTudoDrawingAmount: 0, SectionFavoritadosDrawingAmount: 0, SectionArquivadosDrawingAmount: 0 });
+        port.postMessage({ type: "ready" });
+        port.postMessage({
+            type: "init app",
+            drawings: [],
+            SectionTudoDrawingAmount: 0,
+            SectionFavoritadosDrawingAmount: 0,
+            SectionArquivadosDrawingAmount: 0
+        });
     }
 
     // se o banco de dados já tiver sido criado antes
@@ -122,7 +129,8 @@ self.onconnect = (event) => {
                                 }
                                 resolve();
                             }
-                        })
+                        });
+                        port.postMessage({ type: "ready" });
                         port.postMessage({
                             type: "init app",
                             drawings: drawings,
@@ -258,13 +266,13 @@ self.onconnect = (event) => {
                     secaoArquivadosAddRequest.onsuccess = () => {
                         port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: true, section: msg.section });
                     }
-                } else if(msg.section === "tudo"){
+                } else if (msg.section === "tudo") {
                     objectStores.objectStore("tudo").delete(msg.name);
                     const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     secaoArquivadosAddRequest.onsuccess = () => {
                         port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: false, section: msg.section });
                     }
-                }else {
+                } else {
                     objectStores.objectStore("arquivados").delete(msg.name);
                     const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
                     secaoTudoAddRequest.onsuccess = () => {
@@ -288,10 +296,10 @@ self.onconnect = (event) => {
         }
         else if (msg.type === "get drawing") {
             const drawing = await Drawing.searchDrawing(msg.name, msg.section);
-            if(drawing){
-                port.postMessage({type: "get drawing", result: "success", img: drawing.img});
-            }else{
-                port.postMessage({type: "get drawing", result: "error", img: null, errorMsg: "Desenho não encontrado"});
+            if (drawing) {
+                port.postMessage({ type: "get drawing", result: "success", img: drawing.img });
+            } else {
+                port.postMessage({ type: "get drawing", result: "error", img: null, errorMsg: "Desenho não encontrado" });
             }
         } else if (msg.type === "update drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
