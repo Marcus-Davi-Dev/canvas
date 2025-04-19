@@ -19,7 +19,7 @@ canvas.onmouseup = () => {
 }
 */
 
-import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill";
+import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill.js";
 
 class Draw {
     /**
