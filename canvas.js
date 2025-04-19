@@ -19,6 +19,8 @@ canvas.onmouseup = () => {
 }
 */
 
+import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill";
+
 class Draw {
     /**
      * @param {HTMLCanvasElement} canvas  canvas para o qual será desenhado.
@@ -439,7 +441,7 @@ ctx.lineJoin = "round";
 
 const draw = new Draw(canvas);
 
-const sharedWorker = new SharedWorker("sharedWorker.js");
+const sharedWorker = new SharedWorkerPolyfill("sharedWorker.js");
 
 sharedWorker.port.onmessage = function (ev) {
     const msg = ev.data;

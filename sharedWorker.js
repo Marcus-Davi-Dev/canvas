@@ -35,117 +35,20 @@ class Drawing {
                     cursor.continue();
                 } else {
                     resolve(null);
-                }
-            }
-        })
-    }
+                }    
+            }    
+        })    
+    }    
+}    
+
+function main(port){
+    (async function(){
+        await loadDatabase(port);
+        addOnMessage(port);
+    })();
 }
 
-self.onconnect = (event) => {
-    console.log("SharedWorker: shared worker connected.", event);
-    const port = event.ports[0];
-
-    let request = indexedDB.open("canvas", 1);
-    request.onupgradeneeded = (ev) => {
-        console.log("SharedWorker: database created.");
-        db = ev.target.result;
-
-        db.onerror = (err) => {
-            console.log("SharedWorker: an error ocurred in the database.", err)
-            port.postMessage({ type: "DBerror" });
-        }
-
-        const tudoObjStr = db.createObjectStore("tudo", { keyPath: "name" });
-        // cria um index para pesquisa chamado 'name' que deve ser único.
-        tudoObjStr.createIndex("name", "name", { unique: true });
-        // cria outro index só que para a data de criação, que dessa vez não
-        // é única.
-        tudoObjStr.createIndex("criacao", "criacao", { unique: false });
-        tudoObjStr.createIndex("favorited", "favorited", { unique: false });
-
-        const favoritadosObjStr = db.createObjectStore("favoritados", { keyPath: "name" });
-        favoritadosObjStr.createIndex("name", "name", { unique: true });
-        favoritadosObjStr.createIndex("criacao", "criacao", { unique: false });
-
-        const arquivadosObjStr = db.createObjectStore("arquivados", { keyPath: "name" });
-        arquivadosObjStr.createIndex("name", "name", { unique: true });
-        arquivadosObjStr.createIndex("criacao", "criacao", { unique: false });
-
-        port.postMessage({ type: "ready" });
-        port.postMessage({
-            type: "init app",
-            drawings: [],
-            SectionTudoDrawingAmount: 0,
-            SectionFavoritadosDrawingAmount: 0,
-            SectionArquivadosDrawingAmount: 0
-        });
-    }
-
-    // se o banco de dados já tiver sido criado antes
-    (async function () {
-        // checa quantas databases existem, se existir ao menos uma vai verificar se é a que foi criada por nós.
-        if ((await indexedDB.databases()).length > 0 && !databaseCreated) {
-            let databases = await indexedDB.databases();
-            // percorre todas as databases procurando pela nossa
-            for (let i = 0; i < databases.length; i++) {
-                console.log(`Database ${i + 1} de ${databases.length}`);
-                if (databases[i].name === "canvas") {
-                    console.log("Banco de dados \'canvas\' encontrado.");
-                    const request = indexedDB.open("canvas");
-                    request.onsuccess = async function (ev) {
-                        // atribui a database à variável
-                        db = ev.target.result;
-
-                        db.onerror = () => {
-                            port.postMessage({ type: "DBerror" });
-                        }
-                        // obtem a quantidade de desenhos em cada seção.
-                        let QTDdrawingsSecoes = [0, 0, 0];
-                        const nomesObjectStores = ["tudo", "favoritados", "arquivados"];
-                        let drawings = [];
-                        const objectStores = db.transaction(["tudo", "favoritados", "arquivados"]);
-                        for (let i = 0; i < 3; i++) {
-                            // usa uma promise com await para que o resto do código espere essa operação assíncrona.
-                            await new Promise((resolve) => {
-                                objectStores.objectStore(nomesObjectStores[i]).openCursor().onsuccess = function (ev) {
-                                    const cursor = ev.target.result;
-                                    if (cursor) {
-                                        QTDdrawingsSecoes[i]++;
-                                        cursor.continue();
-                                        return;
-                                    }
-                                    resolve();
-                                }
-                            })
-                        }
-                        // obtem os desenhos que vão ser exibidos quando o usuário entrar no aplicativo.
-                        await new Promise((resolve) => {
-                            objectStores.objectStore("tudo").openCursor().onsuccess = (ev) => {
-                                const cursor = ev.target.result;
-                                if (cursor) {
-                                    drawings.push(cursor.value);
-                                    cursor.continue();
-                                    return;
-                                }
-                                resolve();
-                            }
-                        });
-                        port.postMessage({ type: "ready" });
-                        port.postMessage({
-                            type: "init app",
-                            drawings: drawings,
-                            SectionTudoDrawingAmount: QTDdrawingsSecoes[0],
-                            SectionFavoritadosDrawingAmount: QTDdrawingsSecoes[1],
-                            SectionArquivadosDrawingAmount: QTDdrawingsSecoes[2]
-                        });
-                    };
-                    request.onerror = (err) => { console.log("Erro ao adquirir o database", err) };
-                    break;
-                }
-            }
-        }
-    })()
-
+function addOnMessage(port){
     port.onmessage = async (ev) => {
         console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
@@ -219,7 +122,7 @@ self.onconnect = (event) => {
         }
         else if (msg.type === "favoritate drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
-
+    
             if (drawingInfos) {
                 const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
                 objectStores.onerror = (err) => {
@@ -252,7 +155,7 @@ self.onconnect = (event) => {
         }
         else if (msg.type === "archive drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
-
+            
             if (drawingInfos) {
                 const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
                 objectStores.onerror = (err) => {
@@ -303,7 +206,7 @@ self.onconnect = (event) => {
             }
         } else if (msg.type === "update drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
-
+            
             if (drawingInfos) {
                 const objectStores = db.transaction(["favoritados", "tudo", "arquivados"], "readwrite");
                 if (msg.section === "arquivados") {
@@ -343,4 +246,119 @@ self.onconnect = (event) => {
             }
         }
     }
+}
+
+// port ─ para mandar a mensagem de que o banco de dados já foi carregado.
+async function loadDatabase(port){
+    let request = indexedDB.open("canvas", 1);
+    request.onupgradeneeded = (ev) => {
+        console.log("SharedWorker: database created.");
+        db = ev.target.result;
+        databaseCreated = true;
+    
+        db.onerror = (err) => {
+            console.log("SharedWorker: an error ocurred in the database.", err)
+            port.postMessage({ type: "DBerror" });
+        }
+    
+        const tudoObjStr = db.createObjectStore("tudo", { keyPath: "name" });
+        // cria um index para pesquisa chamado 'name' que deve ser único.
+        tudoObjStr.createIndex("name", "name", { unique: true });
+        // cria outro index só que para a data de criação, que dessa vez não
+        // é única.
+        tudoObjStr.createIndex("criacao", "criacao", { unique: false });
+        tudoObjStr.createIndex("favorited", "favorited", { unique: false });
+    
+        const favoritadosObjStr = db.createObjectStore("favoritados", { keyPath: "name" });
+        favoritadosObjStr.createIndex("name", "name", { unique: true });
+        favoritadosObjStr.createIndex("criacao", "criacao", { unique: false });
+    
+        const arquivadosObjStr = db.createObjectStore("arquivados", { keyPath: "name" });
+        arquivadosObjStr.createIndex("name", "name", { unique: true });
+        arquivadosObjStr.createIndex("criacao", "criacao", { unique: false });
+    
+        port.postMessage({ type: "ready" });
+        port.postMessage({
+            type: "init app",
+            drawings: [],
+            SectionTudoDrawingAmount: 0,
+            SectionFavoritadosDrawingAmount: 0,
+            SectionArquivadosDrawingAmount: 0
+        });
+    }
+    
+    // se o banco de dados já tiver sido criado antes
+    await (async function () {
+        // checa quantas databases existem, se existir ao menos uma vai verificar se é a que foi criada por nós.
+        if ((await indexedDB.databases()).length > 0 && !databaseCreated) {
+            let databases = await indexedDB.databases();
+            // percorre todas as databases procurando pela nossa
+            for (let i = 0; i < databases.length; i++) {
+                console.log(`Database ${i + 1} de ${databases.length}`);
+                if (databases[i].name === "canvas") {
+                    console.log("Banco de dados \'canvas\' encontrado.");
+                    const request = indexedDB.open("canvas");
+                    request.onsuccess = async function (ev) {
+                        // atribui a database à variável
+                        db = ev.target.result;
+    
+                        db.onerror = () => {
+                            port.postMessage({ type: "DBerror" });
+                        }
+                        // obtem a quantidade de desenhos em cada seção.
+                        let QTDdrawingsSecoes = [0, 0, 0];
+                        const nomesObjectStores = ["tudo", "favoritados", "arquivados"];
+                        let drawings = [];
+                        const objectStores = db.transaction(["tudo", "favoritados", "arquivados"]);
+                        for (let i = 0; i < 3; i++) {
+                            // usa uma promise com await para que o resto do código espere essa operação assíncrona.
+                            await new Promise((resolve) => {
+                                objectStores.objectStore(nomesObjectStores[i]).openCursor().onsuccess = function (ev) {
+                                    const cursor = ev.target.result;
+                                    if (cursor) {
+                                        QTDdrawingsSecoes[i]++;
+                                        cursor.continue();
+                                        return;
+                                    }
+                                    resolve();
+                                }
+                            })
+                        }
+                        // obtem os desenhos que vão ser exibidos quando o usuário entrar no aplicativo.
+                        await new Promise((resolve) => {
+                            objectStores.objectStore("tudo").openCursor().onsuccess = (ev) => {
+                                const cursor = ev.target.result;
+                                if (cursor) {
+                                    drawings.push(cursor.value);
+                                    cursor.continue();
+                                    return;
+                                }
+                                resolve();
+                            }
+                        });
+                        port.postMessage({ type: "ready" });
+                        port.postMessage({
+                            type: "init app",
+                            drawings: drawings,
+                            SectionTudoDrawingAmount: QTDdrawingsSecoes[0],
+                            SectionFavoritadosDrawingAmount: QTDdrawingsSecoes[1],
+                            SectionArquivadosDrawingAmount: QTDdrawingsSecoes[2]
+                        });
+                    };
+                    request.onerror = (err) => { console.log("Erro ao adquirir o database", err) };
+                    break;
+                }
+            }
+        }
+    })();
+}
+
+self.onconnect = (event) => {
+    console.log("SharedWorker: shared worker connected.", event);
+    main(event.ports[0]);
+}
+
+if("DedicatedWorkerGlobalScope" in this){
+    console.log("SharedWorker: probably using the polyfill. The SharedWorker is actually a Dedicated Worker.");
+    main(this);
 }

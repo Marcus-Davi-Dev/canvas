@@ -1,3 +1,5 @@
+import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill.js";
+
 const inputModal = document.createElement("dialog");
 document.body.appendChild(inputModal);
 
@@ -24,49 +26,7 @@ const asideExtendedWidth = "133px";
 // tamanho com o menu de configuração aberto
 const asideExtendedPlusWidth = "200px";
 
-async function createSharedWorker(scriptURL) {
-    if ("SharedWorker" in window) {
-        return new SharedWorker(scriptURL);
-    } else {
-        let scriptContent = await (await fetch(scriptURL)).text();
-        // removendo código específico de SharedWorker para poder ser usado em um Dedicated Worker.
-        scriptContent = scriptContent.replaceAll("const port = event.ports[0]", "");
-        scriptContent = scriptContent.replaceAll("port.", "");
-        scriptContent = scriptContent.replaceAll("self.onconnect = (event) => {", "");
-        scriptContent = scriptContent.replaceAll("event", "");
-        scriptContent = scriptContent.split("");
-        scriptContent[scriptContent.lastIndexOf("}")] = "";
-        scriptContent = scriptContent.join("");
-        let url = URL.createObjectURL(new Blob([scriptContent], { type: "text/javascript" }));
-        const fakeSharedWorker = new function () {
-            this.port = new Worker(url);
-            this.onerror = this.port.onerror;
-            this.addEventListener = this.port.addEventListener;
-            this.removeEventListener = this.port.removeEventListener;
-            this.dispatchEvent = this.port.dispatchEvent;
-        }
-        return new Proxy(fakeSharedWorker, {
-            get: function (target, property) {
-                if (property !== "port") {
-                    return Reflect.get(target.port, property);
-                } else {
-                    return Reflect.get(target, property);
-                }
-            },
-            set: function (target, property, value) {
-                if (property !== "port") {
-                    Reflect.set(target.port, property, value);
-                    return true;
-                } else {
-                    Reflect.set(target, property, value);
-                    return true;
-                }
-            }
-        });
-    }
-}
-
-const sharedWorker = await createSharedWorker("sharedWorker.js");
+const sharedWorker = new SharedWorkerPolyfill("sharedWorker.js");
 sharedWorker.onerror = (err) => {
     console.log("SharedWorker error:", err);
 }
