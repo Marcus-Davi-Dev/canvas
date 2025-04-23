@@ -587,9 +587,32 @@ function hideNewPathButton() {
 }
 
 
-canvas.onmousemove = (ev) => {
+canvas.addEventListener("mousemove", handleMouseOrTouchMove);
+canvas.addEventListener("mousedown", handleMouseDownOrTouchStart);
+canvas.addEventListener("mouseup", handleMouseUpOrTouchEnd);
+canvas.addEventListener("touchmove", function(ev){
+    ev.preventDefault();
+    handleMouseOrTouchMove(ev);
+}, {passive: false});
+canvas.addEventListener("touchstart", function(ev){
+    ev.preventDefault();
+    handleMouseDownOrTouchStart(ev);
+}, {passive: false});
+canvas.addEventListener("touchend", function(ev){
+    ev.preventDefault();
+    handleMouseUpOrTouchEnd(ev);
+}, {passive: false});
+
+canvas.addEventListener("click", function (ev) {
+    if (currentDrawingMode === "line") {
+        draw.lineTo(ev.offsetX, ev.offsetY);
+        draw.ctx.stroke();
+    }
+});
+
+function handleMouseOrTouchMove(event){
     if (pintando && currentDrawingMode === "free") {
-        draw.strokeLineTo(ev.offsetX - 2, ev.offsetY - 2);
+        draw.strokeLineTo(getEventPos(event).x - 2, getEventPos(event).y - 2);
     } else if (pintando && currentDrawingMode === "text") {
         try { document.querySelector(".shape-size").remove() } catch { }
         const box = document.createElement("canvas");
@@ -601,7 +624,7 @@ canvas.onmousemove = (ev) => {
         box.height = canvas.height;
         const temporaryDraw = new Draw(box);
         temporaryDraw.ctx.font = draw.ctx.font;
-        temporaryDraw.rectangle(lowestPosition.x, lowestPosition.y, ev.offsetX - lowestPosition.x, ev.offsetY - lowestPosition.y);
+        temporaryDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
         temporaryDraw.text(caracteristicsChildren()[9].value, lowestPosition.x, lowestPosition.y, { fontSize: parseInt(caracteristicsChildren()[4].value), fontFamily: caracteristicsChildren()[7].value });
         box.style.pointerEvents = "none";
         document.body.appendChild(box);
@@ -614,24 +637,25 @@ canvas.onmousemove = (ev) => {
         box.style.left = "0";
         box.width = canvas.width;
         box.height = canvas.height;
-        (new Draw(box)).rectangle(lowestPosition.x, lowestPosition.y, ev.offsetX - lowestPosition.x, ev.offsetY - lowestPosition.y);
+        (new Draw(box)).rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
         box.style.pointerEvents = "none";
         document.body.appendChild(box);
     }
-};
-canvas.onmousedown = (ev) => {
+}
+
+function handleMouseDownOrTouchStart(event){
     if (currentDrawingMode !== "line") {
-        draw.moveTo(ev.offsetX, ev.offsetY);
+        draw.moveTo(getEventPos(event).x, getEventPos(event).y);
     }
-    lowestPosition = { x: ev.offsetX, y: ev.offsetY };
+    lowestPosition = getEventPos(event);
     pintando = true;
     if (currentDrawingMode !== "line") {
         draw.ctx.beginPath();
     }
 }
 
-canvas.onmouseup = (ev) => {
-    highestPosition = { x: ev.offsetX, y: ev.offsetY };
+function handleMouseUpOrTouchEnd(event){
+    highestPosition = getEventPos(event);
     if (currentDrawingMode === "shape") {
         switch (currentShapeToDraw) {
             case "equilateralTriangle":
@@ -666,28 +690,34 @@ canvas.onmouseup = (ev) => {
                 draw[currentShapeToDraw](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y);
                 break;
         }
-
+    
         try { document.querySelector(".shape-size").remove() } catch { }
     }
-
+    
     if (currentDrawingMode !== "line") {
         ctx.closePath();
     }
-
+    
     if (currentDrawingMode === "text") {
         try { document.querySelector(".shape-size").remove() } catch { }
         draw.text(caracteristicsChildren()[9].value, lowestPosition.x, lowestPosition.y, { fontSize: caracteristicsChildren()[4].value, fontFamily: caracteristicsChildren()[7].value });
     }
-
+    
     pintando = false;
 }
 
-canvas.addEventListener("click", function (ev) {
-    if (currentDrawingMode === "line") {
-        draw.lineTo(ev.offsetX, ev.offsetY);
-        draw.ctx.stroke();
+/**
+ * @param {MouseEvent || TouchEvent} event
+*/
+function getEventPos(event){
+    if(event.type === "touchend"){
+        return {x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY};
+    }else if(event.type.startsWith("touch")){
+        return {x: event.touches[0].clientX, y: event.touches[0].clientY};
+    }else{
+        return {x: event.offsetX, y: event.offsetY};
     }
-})
+}
 
 for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++) {
     const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
