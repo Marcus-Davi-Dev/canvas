@@ -191,7 +191,9 @@ sharedWorker.port.onmessage = (ev) => {
         imgJPG.addEventListener("load", function () {
             URL.revokeObjectURL(imgJPG.src);
         });
-        imgJPG.style.backgroundColor = "white"; // para simular uma imagem JPG com fundo branco
+
+        imgPNG.classList.add("png"); // fundo quadriculado de imagens PNG.
+        imgJPG.classList.add("jpeg"); // para simular uma imagem JPG com fundo branco.
 
         option1.appendChild(imgPNG);
         option2.appendChild(imgJPG);
@@ -327,6 +329,7 @@ function renderDrawing(infos) {
     }
     img.style.width = "100%";
     img.style.height = "78%";
+    img.classList.add("png"); // fundo quadriculado de imagens PNG.
 
     a.appendChild(img);
 

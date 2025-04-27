@@ -200,6 +200,16 @@ header .entity {
     max-height: 73px;
 }
 
+.png {
+    background-image: url("images/PNG_background.png");
+    background-repeat: repeat;
+    background-size: 10px;
+}
+
+.jpeg {
+    background-color: white;
+}
+
 .info {
     display: flex;
     justify-content: space-between;
