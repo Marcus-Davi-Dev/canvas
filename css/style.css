@@ -316,7 +316,6 @@ dialog .option[data-selected] {
 
 @media screen and (prefers-color-scheme: dark) {
     :root {
-        --aside-width: 109.781px;
         --body-background-color: #3f3f3f;
         --primary-background-color: #222;
         --darker-border-color: #0f0f0f;
