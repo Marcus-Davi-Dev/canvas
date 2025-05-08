@@ -39,9 +39,15 @@ html {
     width: 200px;
     background-color: var(--secundary-color);
     border-radius: 999px;
+}
+
+#resizer-wrraper {
+    height: 20px;
+    width: 100%;
     position: absolute;
-    top: 4px;
-    left: calc(50% - 200px / 2);
+    display: flex;
+    justify-content: center;
+    padding: 4px 0 0 0;
 }
 
 #drawing-options {
@@ -52,27 +58,28 @@ html {
     width: 80%;
     height: 60px;
     background-color: var(--principal-background-color);
-    border-radius: 20px 20px 0 0;
+    border-radius: 8px 8px 0 0;
     justify-content: space-between;
 }
 
 #shape-selector {
     display: none;
     width: 100%;
-    margin-top: 8px;
 }
 
 #shape-selctor h3 {
-    margin: calc(var(--shape-selector-not-resized-height)) 0;
+    margin: var(--shape-selector-not-resized-height) 0;
 }
 
 #shape-selector button {
     margin: 0;
-    padding: 2px;
+    padding: var(--shape-selector-button-padding);
     border: 0;
-    background-color: var(--button-background-color);
+    background-color: var(
+    --button-background-color);
     border-radius: 4px;
-    box-shadow: 1px 1px 0 0 gray, var(--inset-shape-box-shadow);
+    box-shadow: 1px 1px 0 0 gray, var(
+    --inset-shape-box-shadow);
 }
 
 #shape-selector button:hover {
@@ -89,12 +96,18 @@ html {
     box-shadow: var(--inset-shape-box-shadow) !important;
 }
 
+#shape-selector button canvas {
+    aspect-ratio: 1 / 1;
+    width: 1rem;
+    height: 1rem;
+}
+
 #shapes {
     flex-grow: 1;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 2px 5px;
-    padding: 0 5px 0 0;
+    padding: 0 5px;
 }
 
 #drawing-type {
@@ -102,9 +115,17 @@ html {
 }
 
 #drawing-options.resized {
-    height: 500px;
+    overflow-y: scroll;
+    height: 40%;
+    max-height: 70%;
     flex-wrap: wrap;
     align-content: flex-start;
+}
+
+#drawing-options.resized #resizer-wrraper {
+    outline: none !important;
+    position: sticky;
+    top: 0;
 }
 
 #drawing-options.resized #shape-selector {
@@ -114,12 +135,24 @@ html {
     align-items: center;
 }
 
+#drawing-options.resized #shape-selector h3 {
+    margin: 0.8em 0px;
+}
+
 #drawing-options.resized #shapes {
     width: 100%;
 }
 
 #drawing-options.resized #drawing-type {
+    display: grid;
+    justify-items: center;
+    grid-template-columns: 1fr 1fr;
+    margin: auto;
+}
+
+#drawing-options.resized #caracteristics h3 {
     display: block;
+    text-align: center;
 }
 
 #drawing-type button,
@@ -130,6 +163,18 @@ html {
     border-radius: 20px;
     padding: 2px 7px;
     color: var(--principal-color);
+    font-size: 0.8rem;
+}
+
+#drawing-type h3 {
+    grid-column: span 2;
+}
+
+#drawing-type button {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.8rem;
 }
 
 #drawing-type button canvas {
@@ -141,6 +186,11 @@ html {
 
 #caracteristics {
     padding: 7px 18px;
+    margin: 0 auto;
+}
+
+#caracteristics h3 {
+    display: none;
 }
 
 #caracteristics input[type="number"] {
@@ -149,6 +199,12 @@ html {
 
 #caracteristics input {
     max-width: 100px;
+}
+
+#caracteristics > div[data-text-caracteristic] {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
 }
 
 .active {
@@ -173,8 +229,33 @@ dialog button > a, dialog button {
     border-radius: 7px;
 }
 
+@media screen and (min-width: 560px){
+    #drawing-options.resized #drawing-type {
+        margin: 0;
+    }
+
+    #drawing-options.resized #caracteristics {
+        margin: 0;
+    }
+}
+
+@media screen and (max-width: 400px){
+    /* this grid design was created for 10 elements in the grid,
+       if this changes, this design will have to change too.*/
+    #shape-selector div {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    #shape-selector #shapes :nth-child(n+9){
+        grid-column: span 2;
+    }
+}
+
 @media screen and (prefers-color-scheme: dark) {
     :root {
+        --shape-selector-canvas-size: calc(16px * (var(--text-size) / 16));
+        --shape-selector-grid-columns: 2;
+        --shape-selector-button-padding: 2px;
         --inset-shape-box-shadow: 0 0 3px 0.5px rgba(0, 0, 0, 0.75) inset;
         --principal-color: white;
         --secundary-color: whitesmoke;

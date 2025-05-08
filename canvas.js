@@ -467,7 +467,9 @@ sharedWorker.port.onmessage = function (ev) {
     }
 }
 
-
+HTMLElement.prototype.resetStyle = function(){
+    this.style = "";
+}
 
 function caracteristicsChildren() {
     return Array.from(document.querySelector("#caracteristics").children);
@@ -479,13 +481,16 @@ function showTextCaracteristics() {
         const label1 = document.createElement("label");
         label1.textContent = "Tamanho da fonte: ";
         label1.setAttribute("for", "font-size");
+        
         const input1 = document.createElement("input");
         input1.type = "number";
         input1.id = "font-size";
         input1.min = "2";
+        
         const label2 = document.createElement("label");
         label2.textContent = "Família da fonte: ";
         label2.setAttribute("for", "font-family");
+        
         const input2 = document.createElement("input");
         input2.id = "font-family";
         input2.setAttribute("list", "availableFonts");
@@ -493,6 +498,7 @@ function showTextCaracteristics() {
         const textInputLabel = document.createElement("label");
         textInputLabel.setAttribute("for", "text");
         textInputLabel.textContent = "Texto: ";
+        
         const textInput = document.createElement("input");
         textInput.id = "text";
 
@@ -535,30 +541,40 @@ function showTextCaracteristics() {
             })();
         }
 
-        console.log(carac.children);
         carac.children[3].remove();
         carac.children[3].remove();
         carac.children[3].remove();
-        console.log(carac.children);
 
-        label1.setAttribute("data-text-caracteristic", "true");
-        input1.setAttribute("data-text-caracteristic", "true");
-        label2.setAttribute("data-text-caracteristic", "true");
-        input2.setAttribute("data-text-caracteristic", "true");
-        textInputLabel.setAttribute("data-text-caracteristic", "true");
-        textInput.setAttribute("data-text-caracteristic", "true");
-        carac.appendChild(label1);
-        carac.appendChild(input1);
-        carac.appendChild(document.createElement("br"));
-        carac.appendChild(label2);
-        carac.appendChild(input2);
-        carac.appendChild(textInputLabel);
-        carac.appendChild(textInput);
+        //label1.setAttribute("data-text-caracteristic", "true");
+        //input1.setAttribute("data-text-caracteristic", "true");
+        //label2.setAttribute("data-text-caracteristic", "true");
+        //input2.setAttribute("data-text-caracteristic", "true");
+        //textInputLabel.setAttribute("data-text-caracteristic", "true");
+        //textInput.setAttribute("data-text-caracteristic", "true");
+
+        const wrraper1 = document.createElement("div");
+        const wrraper2 = document.createElement("div");
+        const textInputWrraper = document.createElement("div");
+
+        wrraper1.setAttribute("data-text-caracteristic", "true");
+        wrraper2.setAttribute("data-text-caracteristic", "true");
+        textInputWrraper.setAttribute("data-text-caracteristic", "true");
+
+        wrraper1.appendChild(label1);
+        wrraper1.appendChild(input1);
+        wrraper2.appendChild(label2);
+        wrraper2.appendChild(input2);
+        textInputWrraper.appendChild(textInputLabel);
+        textInputWrraper.appendChild(textInput);
+        
+        carac.appendChild(wrraper1);
+        carac.appendChild(wrraper2);
+        carac.appendChild(textInputWrraper);
     }
 }
 
 function hideTextCaracteristics() {
-    const textCaracteristics = caracteristicsChildren().filter((el) => { return el.getAttribute("data-text-caracteristic") })
+    const textCaracteristics = caracteristicsChildren().filter((el) => { return el.getAttribute("data-text-caracteristic") });
     if (textCaracteristics.length) {
         for (let i = 0; i < textCaracteristics.length; i++) {
             textCaracteristics[i].remove();
@@ -566,6 +582,8 @@ function hideTextCaracteristics() {
         const label = document.createElement("label");
         label.setAttribute("for", "drawing-line-width");
         label.textContent = "Espessura: ";
+
+        document.querySelector("#caracteristics").appendChild(document.createElement("br"));
         document.querySelector("#caracteristics").appendChild(label);
         document.querySelector("#caracteristics").appendChild(lineWidthInput);
     }
@@ -574,6 +592,7 @@ function hideTextCaracteristics() {
 function showNewPathButton() {
     if (!(caracteristicsChildren().filter((el) => { return el.textContent === "Iniciar novo traço" }).length)) {
         const button = document.createElement("button");
+        button.style.display = "block";
         button.textContent = "Iniciar novo traço";
         button.addEventListener("click", function () { draw.ctx.beginPath() })
         document.querySelector("#caracteristics").appendChild(button);
@@ -603,6 +622,11 @@ canvas.addEventListener("touchend", function(ev){
     handleMouseUpOrTouchEnd(ev);
 }, {passive: false});
 
+canvas.addEventListener("touchcancel", function(ev){
+    console.log(ev);
+    console.log("cancel acima ^");
+}, {passive: false});
+
 canvas.addEventListener("click", function (ev) {
     if (currentDrawingMode === "line") {
         draw.lineTo(ev.offsetX, ev.offsetY);
@@ -625,7 +649,7 @@ function handleMouseOrTouchMove(event){
         const temporaryDraw = new Draw(box);
         temporaryDraw.ctx.font = draw.ctx.font;
         temporaryDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
-        temporaryDraw.text(caracteristicsChildren()[9].value, lowestPosition.x, lowestPosition.y, { fontSize: parseInt(caracteristicsChildren()[4].value), fontFamily: caracteristicsChildren()[7].value });
+        temporaryDraw.text(caracteristicsChildren()[5].children[1].value, lowestPosition.x, lowestPosition.y, { fontSize: parseInt(caracteristicsChildren()[3].children[1].value), fontFamily: caracteristicsChildren()[4].children[1].value });
         box.style.pointerEvents = "none";
         document.body.appendChild(box);
     } else if (pintando && currentDrawingMode === "shape") {
@@ -644,6 +668,7 @@ function handleMouseOrTouchMove(event){
 }
 
 function handleMouseDownOrTouchStart(event){
+    console.log(event);
     if (currentDrawingMode !== "line") {
         draw.moveTo(getEventPos(event).x, getEventPos(event).y);
     }
@@ -655,6 +680,7 @@ function handleMouseDownOrTouchStart(event){
 }
 
 function handleMouseUpOrTouchEnd(event){
+    console.log(event);
     highestPosition = getEventPos(event);
     if (currentDrawingMode === "shape") {
         switch (currentShapeToDraw) {
@@ -700,7 +726,7 @@ function handleMouseUpOrTouchEnd(event){
     
     if (currentDrawingMode === "text") {
         try { document.querySelector(".shape-size").remove() } catch { }
-        draw.text(caracteristicsChildren()[9].value, lowestPosition.x, lowestPosition.y, { fontSize: caracteristicsChildren()[4].value, fontFamily: caracteristicsChildren()[7].value });
+        draw.text(caracteristicsChildren()[5].children[1].value, lowestPosition.x, lowestPosition.y, { fontSize: caracteristicsChildren()[3].children[1].value, fontFamily: caracteristicsChildren()[4].children[1].value });
     }
     
     pintando = false;
@@ -756,8 +782,8 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
         document.querySelectorAll("button[data-type]")[i].addEventListener("click", function () {
             draw.ctx.beginPath();
             currentDrawingMode = this.getAttribute("data-type");
-            showNewPathButton();
             hideTextCaracteristics();
+            showNewPathButton();
             document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
             this.classList.add("active");
         })
@@ -852,6 +878,7 @@ drawingColorInput.addEventListener("input", function () {
 
 resizer.addEventListener("click", function () {
     drawingOptions.classList.toggle("resized");
+    resizer.parentElement.resetStyle();
 })
 
 closeCanvasBtn.addEventListener('click', function () {
@@ -901,4 +928,15 @@ closeCanvasBtn.addEventListener('click', function () {
 
     document.body.appendChild(dialog);
     dialog.showModal();
-})
+});
+
+// background color change when scrolling for resizer wrraper
+drawingOptions.addEventListener("scroll", function(ev){
+    if(ev.target.scrollTop > 10){
+        resizer.parentElement.style.outline = "2px rgba(0, 0, 0, 0.4) solid";
+        resizer.parentElement.style.backgroundColor = "rgb(38, 38, 48)";
+    }else{
+        resizer.parentElement.style.outline = "none";
+        resizer.parentElement.style.backgroundColor = "inherit";
+    }
+}, {passive: true});

@@ -12,7 +12,9 @@
     <button id="return">&lt;- Voltar</button>
     <canvas id="main-canvas" height="999" width="999"></canvas>
     <div id="drawing-options">
-        <div id="resizer"></div>
+        <div id="resizer-wrraper">
+            <div id="resizer"></div>
+        </div>
         <div id="shape-selector">
             <h3>Seletor de formas</h3>
             <div id="shapes">
@@ -56,6 +58,7 @@
             <button data-type="clear">Borracha: <canvas height="200px" width="200px"></canvas></button>
         </div>
         <div id="caracteristics">
+            <h3>Opções:</h3>
             <datalist id="availableFonts"></datalist>
             <label for="drawing-line-color">Cor: </label>
             <input id="drawing-line-color" type="color">
