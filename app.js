@@ -29,9 +29,9 @@ const asideExtendedPlusWidth = "200px";
 const sharedWorker = new SharedWorkerPolyfill("sharedWorker.js");
 sharedWorker.onerror = (err) => {
     console.log("SharedWorker error:", err);
-}
+};
 
-sharedWorker.port.onmessage = (ev) => {
+sharedWorker.port.onmessage = async (ev) => {
     const msg = ev.data;
 
     // utilizarei ifs e else ifs para manter o escopo em cada if,
@@ -44,10 +44,10 @@ sharedWorker.port.onmessage = (ev) => {
                 inputModal.querySelector("#aviso-input-invalido").remove();
             }
             // atualiza o contador de desenhos da seção em que o desenho foi criado.
-            if(msg.drawing.favorited){
+            if (msg.drawing.favorited) {
                 incrementDrawingCounter("tudo", 1);
                 incrementDrawingCounter("favoritados", 1);
-            }else{
+            } else {
                 incrementDrawingCounter(asideSelectedSection, 1);
             }
         } else {
@@ -65,10 +65,10 @@ sharedWorker.port.onmessage = (ev) => {
             return;
         }
 
-        if(msg.favorited){
+        if (msg.favorited) {
             decrementDrawingCounter("tudo", 1);
             decrementDrawingCounter("favoritados", 1);
-        }else{
+        } else {
             decrementDrawingCounter(asideSelectedSection, 1);
         }
     }
@@ -124,169 +124,89 @@ sharedWorker.port.onmessage = (ev) => {
             incrementDrawingCounter("arquivados", 1);
             decrementDrawingCounter("tudo", 1);
             removeDrawing(msg.name);
-        }else{
+        } else {
             decrementDrawingCounter("arquivados", 1);
             incrementDrawingCounter("tudo", 1);
             removeDrawing(msg.name);
         }
     }
     else if (msg.type === "export drawing") {
-        inputModal.showModal();
-        inputModal.innerHTML = "";
-        inputModal.setAttribute("data-input-modal", "exportar desenho");
+        const img = new Image();
+        img.src = URL.createObjectURL(msg.img);
+        await new Promise((resolve) => { img.onload = () => { resolve() } });
 
-        const title = document.createElement("h2");
-        title.textContent = "Exportar desenho";
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
 
-        const option1 = document.createElement("div");
-        option1.classList.add("option");
-        const texto1 = document.createElement("div");
-        const titulo1 = document.createElement("h3");
-        titulo1.textContent = "PNG";
-        const descricao1 = document.createElement("p");
-        descricao1.textContent = "Formato PNG. Imagem sem fundo.";
-
-        const option2 = document.createElement("div");
-        option2.classList.add("option");
-        const texto2 = document.createElement("div");
-        const titulo2 = document.createElement("h3");
-        titulo2.textContent = "JPG";
-        const descricao2 = document.createElement("p");
-        descricao2.textContent = "Formato JPG. Imagem com fundo branco.";
-
-        option1.addEventListener("click", function () {
-            if (this.getAttribute("data-selected")) {
-                this.removeAttribute("data-selected");
-            } else {
-                this.setAttribute("data-selected", "true");
-                option2.removeAttribute("data-selected");
-            }
-        })
-
-        option2.addEventListener("click", function () {
-            if (this.getAttribute("data-selected")) {
-                this.removeAttribute("data-selected");
-            } else {
-                this.setAttribute("data-selected", "true");
-                option1.removeAttribute("data-selected");
-            }
-        })
-
-        inputModal.appendChild(title);
-        inputModal.appendChild(option1);
-        option1.appendChild(texto1);
-        texto1.appendChild(titulo1);
-        texto1.appendChild(descricao1);
-
-        inputModal.appendChild(option2);
-        option2.appendChild(texto2);
-        texto2.appendChild(titulo2);
-        texto2.appendChild(descricao2);
-
-        // imagens de demonstração
-        const imgPNG = document.createElement("img");
-        imgPNG.src = URL.createObjectURL(msg.img);
-        const imgJPG = document.createElement("img");
-        imgJPG.src = imgPNG.src;
-        imgJPG.addEventListener("load", function () {
-            URL.revokeObjectURL(imgJPG.src);
-        });
-
-        imgPNG.classList.add("png"); // fundo quadriculado de imagens PNG.
-        imgJPG.classList.add("jpeg"); // para simular uma imagem JPG com fundo branco.
-
-        option1.appendChild(imgPNG);
-        option2.appendChild(imgJPG);
-
-        // botões de confirmação e cancelamento da exportação.
-        const confirmBtn = document.createElement("button");
-        confirmBtn.textContent = "OK";
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "Cancelar";
-        cancelBtn.onclick = function () { inputModal.close() };
-        confirmBtn.onclick = function () {
-            let url;
-
-            const a = document.createElement("a");
-            document.body.appendChild(a);
-
-            if (option1.getAttribute("data-selected")) { // img png
-                // usar typeof em um blob retorna 'object'
-                if (typeof msg.img === typeof {}) {
-                    a.href = URL.createObjectURL(msg.img);
-                    url = a.href;
-                    a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
-                    a.download = msg.name;
-                    a.click();
-                    setTimeout(function () {
-                        a.remove();
-                        URL.revokeObjectURL(url);
-                    }, 50);
-                } else {
-                    const canvas = document.createElement("canvas");
-                    const img = new Image();
-                    img.src = msg.img;
-                    canvas.height = img.height;
-                    canvas.width = img.width;
-                    canvas.getContext("2d").drawImage(img, 0, 0);
-                    canvas.toBlob((blob) => {
-                        a.href = URL.createObjectURL(blob);
-                        url = a.href;
-                        a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
-                        a.download = msg.name;
-                        a.click();
-                        setTimeout(function () {
-                            a.remove();
-                            URL.revokeObjectURL(url);
-                        }, 50);
-                    })
-                }
-            } else if (option2.getAttribute("data-selected")) {
-                const img = new Image();
-                // usar typeof em um blob retorna 'object'
-                if (typeof msg.img === typeof {}) {
-                    url = URL.createObjectURL(msg.img);
-                    img.src = url;
-                } else {
-                    img.src = msg.img;
-                }
-                document.body.appendChild(img);
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.height = img.height;
-                    canvas.width = img.width;
-                    img.remove();
-                    const ctx = canvas.getContext("2d");
-                    // fazer a imagem ter fundo branco.
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(0, canvas.height);
-                    ctx.lineTo(canvas.width, canvas.height);
-                    ctx.lineTo(canvas.width, 0);
-                    ctx.lineTo(0, 0);
-                    ctx.fillStyle = "white";
-                    ctx.fill();
-
-                    ctx.drawImage(img, 0, 0);
-                    if (url) {
-                        URL.revokeObjectURL(url);
-                    }
-                    canvas.toBlob((blob) => {
-                        url = URL.createObjectURL(blob);
-                        a.href = url;
-                        a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
-                        a.download = msg.name;
-                        a.click();
-                        setTimeout(function () {
-                            a.remove();
-                            URL.revokeObjectURL(url);
-                        });
-                    });
-                }
+        // png quadriculated background
+        // the gray squares will have 10px width and height
+        ctx.fillStyle = "gray";
+        for (let x = 0; x <= canvas.width; x += 10) {
+            for (let y = 0; y <= canvas.height; y += 10) {
+                ctx.fillRect(x, y, 10, 10);
             }
         }
 
-        inputModal.appendChild(cancelBtn);
-        inputModal.appendChild(confirmBtn);
+        ctx.drawImage(img, 0, 0);
+
+        let imgPNG;
+        canvas.toBlob((blob) => { imgPNG = URL.createObjectURL(blob) });
+
+        // clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // give the canvas a white background to replace
+        // the transparent one
+        ctx.fillStyle = "white";
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, canvas.height);
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(canvas.width, 0);
+        ctx.lineTo(0, 0);
+        ctx.fill();
+
+        let imgJPG;
+        canvas.toBlob((blob) => { imgJPG = URL.createObjectURL(blob) });
+
+        const selectedOption = await showInputModal("select", {
+            selectOptions: [
+                {
+                    label: "Formato PNG",
+                    description: "Imagem sem fundo.",
+                    id: "PNG",
+                    images: [imgPNG]
+                },
+                {
+                    label: "Formato JPEG",
+                    description: "Imagem com fundo branco.",
+                    id: "JPEG",
+                    images: [imgJPG]
+                }
+            ]
+        });
+
+        URL.revokeObjectURL(imgPNG);
+        URL.revokeObjectURL(imgJPG);
+
+        if (selectedOption) {
+            const a = document.createElement("a");
+            document.body.appendChild(a);
+            a.download = msg.name;
+
+            switch (selectedOption.id) {
+                case "PNG":
+                    a.href = imgPNG;
+                    break;
+                case "JPEG":
+                    a.href = imgJPG;
+                    break;
+            }
+
+            a.click();
+            a.remove();
+        }
     } else if (msg.type === "search drawings") {
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         for (let i = 0; i < msg.drawings.length; i++) {
@@ -309,7 +229,7 @@ sharedWorker.port.onmessage = (ev) => {
     } else if (msg.type === "DBerror") {
         alert("Ocorreu um erro no banco de dados, tente recarregar a página");
     }
-}
+};
 
 /**
  * @param {Object} infos * name: nome do desenho
@@ -326,7 +246,7 @@ function renderDrawing(infos) {
     img.src = URL.createObjectURL(infos.img);
     img.onload = function () {
         URL.revokeObjectURL(img.src);
-    }
+    };
     img.style.width = "100%";
     img.style.height = "78%";
     img.classList.add("png"); // fundo quadriculado de imagens PNG.
@@ -385,7 +305,7 @@ function renderDrawing(infos) {
     // primeira opção
     options.querySelectorAll("button")[0].addEventListener('click', function () {
         deleteDrawing(infos.name, asideSelectedSection);
-    })
+    });
 
     drawing.appendChild(a);
     drawing.appendChild(info);
@@ -415,61 +335,325 @@ function renderDrawing(infos) {
     return drawing;
 }
 
-async function showInputModal(options) {
+async function showInputModal(type, options) {
+    // create here because of every switch-case case scope
+    // and because if the function returned the result in
+    // the switch-case the later code would not execute.
+    let result;
+
     inputModal.showModal();
-    inputModal.innerHTML = "";
-    inputModal.setAttribute("data-input-modal", "criar desenho");
-
-    const title = document.createElement("h3");
-    title.style.margin = "2px 0";
-    title.textContent = options.title || "";
-
-    const input = document.createElement("input");
+    clearInputModal();
 
     const btns = document.createElement("div");
+    btns.id = "buttons";
     btns.style.display = "flex";
     btns.style.justifyContent = "flex-end";
 
+    // the buttons that will cancel ou confirm to send the input.
     const cancelBtn = document.createElement("button");
     cancelBtn.textContent = "CANCELAR";
     const confirmBtn = document.createElement("button");
     confirmBtn.textContent = "OK";
 
-    const result = new Promise((resolve, reject) => {
-        confirmBtn.addEventListener('click', async function () {
-            sharedWorker.port.postMessage({ type: "create drawing", name: input.value, section: asideSelectedSection });
-            resolve(input.value);
-        });
+    // values for options
+    /*const options = {
+        title: string,
+        message?: string,
+        label?: string,
+        labels?: string[],
+        inputAmount: number,
+        selectOptions: { // the options for the select type.
+            label: string,
+            description?: string,
+            id: string
+        }[]
+    };*/
 
-        cancelBtn.addEventListener('click', function () {
-            inputModal.close();
-            reject(new Error("A operação foi abortada."));
-        });
-    });
+    const error = document.createElement("span");
+    error.id = "error";
 
-    inputModal.appendChild(title);
-
-    if (options.description) {
-        const description = document.createElement("span");
-        description.innerHTML = options.description;
-        inputModal.appendChild(description);
-        // quebra de linha.
-        inputModal.appendChild(document.createElement("br"));
+    if (options.title) {
+        const title = document.createElement("h3");
+        title.style.margin = "2px 0";
+        title.textContent = options.title;
+        inputModal.appendChild(title);
     }
 
-    inputModal.appendChild(input);
-    inputModal.appendChild(btns);
+    // some message to the user ou description of the form.
+    if (options.message) {
+        const message = document.createElement("span");
+        message.innerHTML = options.message;
+        inputModal.appendChild(message);
+    }
+
+    // add the part of the modal that will actually receive the input.
+    switch (type) {
+        // from 'options' uses if possible label
+        case "input":
+            inputModal.classList.add("input-modal");
+
+            const input = document.createElement("input");
+            // prevent the form default action.
+            input.addEventListener("keydown", function(ev){
+                if(ev.key === "Enter"){
+                    ev.preventDefault();
+                }
+            });
+
+            // scope for the form variable.
+            (function () {
+                const form = document.createElement("form");
+                if (options.label) {
+                    const label = document.createElement("label");
+                    label.textContent = options.label;
+                    label.htmlFor = "input";
+                    input.id = "input";
+
+                    const wrraper = document.createElement("div");
+                    wrraper.classList.add("flex-column");
+                    wrraper.appendChild(label);
+                    wrraper.appendChild(input);
+                    form.appendChild(wrraper);
+                } else {
+                    form.appendChild(input);
+                }
+                form.appendChild(btns);
+                inputModal.appendChild(form);
+
+                input.focus();
+            })();
+
+            result = new Promise((resolve, reject) => {
+                confirmBtn.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+
+                    resolve(input.value);
+                });
+
+                cancelBtn.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+
+                    inputModal.close();
+                    reject(new Error("A operação foi cancelada."));
+                });
+            });
+            break;
+        // from 'options' uses inputAmount and if possible labels
+        case "multiple input":
+            inputModal.classList.add("input-modal");
+
+            if (options.inputAmount > options.labels.length) {
+                console.warn(`Were passed more inputs (${options.inputAmount}) than labels (${options.labels.length}) to the input modal. The remaining inputs will not be shown. ${options.inputAmount - options.labels.length} inputs excluded.`);
+                options.inputAmount = options.labels.length;
+            } else if (options.inputAmount < options.labels.length) {
+                console.warn(`Were passed more labels (${options.inputAmount}) than inputs (${options.labels.length}) to the input modal. The remaining labels will not be shown. ${options.labels.length - options.inputAmount} labels excluded.`);
+            }
+
+            // scope for the form variable.
+            (function () {
+                const form = document.createElement("form");
+                for (let i = 0; i < options.inputAmount; i++) {
+                    const input = document.createElement("input");
+                    // prevent the form default action.
+                    input.addEventListener("keydown", function(ev){
+                        if(ev.key === "Enter"){
+                            ev.preventDefault();
+                        }
+                    });
+                    if (!options.labels.length) {
+                        form.appendChild(input);
+                    } else {
+                        const wrraper = document.querySelector("div");
+                        wrraper.classList.add("flex-column");
+
+                        const label = document.createElement("label");
+                        label.textContent = options.labels[i];
+                        label.id = `input-${i + 1}`;
+                        input.id = `input-${i + 1}`;
+
+                        wrraper.appendChild(label);
+                        wrraper.appendChild(input);
+                        form.appendChild(wrraper);
+                    }
+                }
+                form.appendChild(btns);
+                inputModal.appendChild(form);
+            })();
+
+            result = new Promise((resolve, reject) => {
+                confirmBtn.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+
+                    const values = [];
+                    for (let i = 0; i < inputModal.querySelectorAll("input").length; i++) {
+                        values.push(inputModal.querySelectorAll("input")[i].value);
+                    }
+                    resolve(values);
+                });
+
+                cancelBtn.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+
+                    inputModal.close();
+                    reject(new Error("A operação foi cancelada."));
+                });
+            });
+            break;
+        // from 'options' uses nothing
+        case "confirm":
+            result = new Promise((resolve) => {
+                confirmBtn.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+
+                    resolve(true);
+                });
+
+                cancelBtn.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+
+                    inputModal.close();
+                    resolve(false);
+                });
+            });
+
+            break;
+        // from 'options' uses selectedOptions[n].id, selectedOptions[n].label
+        // and if possible selectedOptions[n].description and selectedOptions[n].images[n]
+        case "select":
+            // check ids and labels
+            let ids = [];
+            options.selectOptions.forEach(function (item) {
+                if (item.id === undefined) {
+                    inputModalError();
+                    throw new TypeError("All the options must have an id.");
+                }
+                ids.push(item.id);
+            });
+
+            ids.forEach(function (id, index) {
+                if (ids.lastIndexOf(id) !== index) {
+                    inputModalError();
+                    throw new Error("The id of an option must be unique.");
+                }
+            });
+
+            ids.forEach(function (item, index) {
+                if (options.selectOptions[index].label === undefined) {
+                    inputModalError();
+                    throw new TypeError("All the options must have a label.");
+                }
+            });
+            // end of check
+
+            const selectList = document.createElement("ul");
+            selectList.role = "listbox";
+
+            for (let i = 0; i < options.selectOptions.length; i++) {
+                const option = document.createElement("li");
+                const wrraper = document.createElement("div");
+                const title = document.createElement("span");
+
+                option.classList.add("option");
+                wrraper.classList.add("flex-column");
+                title.textContent = options.selectOptions[i].label;
+
+                option.setAttribute("data-id", options.selectOptions[index].id);
+                // option click event listener
+                option.addEventListener("click", function () {
+                    selectList.querySelector("[aria-selected='true']").setAttribute("aria-selected", "false");
+                    this.setAttribute("aria-selected", "true");
+                });
+
+                wrraper.appendChild(title);
+                // if there is a description, add it.
+                if (options.selectOptions[i].description) {
+                    const description = document.createElement("span");
+                    description.textContent = options.selectOptions[i].description;
+                    wrraper.appendChild(description);
+                }
+                option.appendChild(wrraper);
+                // the same thing with images.
+                if (options.selectOptions[i].images.length) {
+                    options.selectOptions[i].images.forEach(function (src) {
+                        const image = document.createElement("img");
+                        image.src = src;
+                        option.appendChild(image);
+                    });
+                }
+                selectList.appendChild(option);
+            }
+
+            result = new Promise((resolve, reject) => {
+                confirmBtn.addEventListener('click', function () {
+                    resolve(selectList.querySelector("[aria-selected='true']").getAttribute("data-id"));
+                });
+
+                cancelBtn.addEventListener('click', function () {
+                    inputModal.close();
+                    reject(new Error("A operação foi cancelada."));
+                });
+            });
+
+            break;
+    }
+
+    inputModal.appendChild(error);
     btns.appendChild(cancelBtn);
     btns.appendChild(confirmBtn);
-    input.focus();
+    if (!inputModal.querySelector("form")) {
+        inputModal.appendChild(btns);
+    }
 
     return result;
 }
 
-newDrawingBtn.addEventListener('click', function () {
-    showInputModal({
-        title: `Novo desenho à ${asideSelectedSection[0].toUpperCase() + asideSelectedSection.substring(1)}`,
-        description: "Nome do desenho."
+// parameters error or something like this.
+// errors that are about the internal logic of the modal.
+function inputModalError() {
+    clearInputModal(false);
+    inputModal.classList.add("error");
+
+    const h1 = document.createElement("h1");
+    h1.textContent = "Erro!";
+    h1.margin = "auto";
+    const message = document.createElement("p");
+    message.innerHTML = "Um erro ocorreu durante a construção deste elemento.<br> Olhe o console para mais informações.";
+
+    inputModal.appendChild(h1);
+    inputModal.appendChild(message);
+    // remove the "cancel" button to only have the confirm.
+    inputModal.querySelector("#buttons").children[0].remove();
+    inputModal.querySelector("#buttons").style.justifyContent = "flex-end";
+}
+
+// input errors or something like this.
+// errors that are about the input the user gave.
+function setInputModalErrorMessage(message) {
+    inputModal.querySelector("#error").textContent = message;
+}
+
+function clearInputModal(noButtons = true) {
+    if (noButtons) {
+        inputModal.innerHTML = "";
+    } else {
+        toArray(inputModal.children).forEach(function (child) {
+            if (child.id !== "buttons") {
+                child.remove();
+            }
+        });
+    }
+    inputModal.classList.forEach((className) => { inputModal.classList.remove(className); });
+}
+
+newDrawingBtn.addEventListener('click', async function () {
+    sharedWorker.port.postMessage({
+        type: "create drawing",
+        name:
+            await showInputModal("input", {
+                title: `Novo desenho à ${asideSelectedSection[0].toUpperCase() + asideSelectedSection.substring(1)}`,
+                label: "Nome do desenho."
+            }),
+        section: asideSelectedSection
     });
 });
 
@@ -487,12 +671,12 @@ for (let i = 0; i < asideSections.length; i++) {
             asideSections[j].setAttribute("aria-selected", "false");
         }
         this.setAttribute("aria-selected", "true");
-    })
+    });
 }
 searchBtn.addEventListener('click', function (ev) {
     ev.preventDefault();
     sharedWorker.port.postMessage({ type: "search drawings", section: asideSelectedSection, search: searchInput.value });
-})
+});
 
 window.onresize = updateDrawingsMenuPosition;
 
@@ -510,14 +694,14 @@ more.addEventListener('click', function () {
     }
 
     setTimeout(updateDrawingsMenuPosition, 1000);
-})
+});
 
 closeConfigMenuBtn.addEventListener('click', hideConfigMenu);
 configBtn.addEventListener('click', showConfigMenu);
 drawingsCounterCheckbox.addEventListener('click', toggleDrawingsCounter);
 themeSelector.addEventListener('change', function () {
     changeTheme(this.value);
-})
+});
 
 function showConfigMenu() {
     asideSections[0].parentNode.classList.add("hidden");
@@ -647,4 +831,8 @@ function deleteDrawing(name, section) {
     removeDrawing(name);
     // deve ser feito no onmessage do Shared Worker.
     // decrementDrawingCounter(section, 1);
+}
+
+function toArray(iterable) {
+    return Array.from(iterable);
 }
