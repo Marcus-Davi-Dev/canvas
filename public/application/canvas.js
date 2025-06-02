@@ -20,6 +20,7 @@ canvas.onmouseup = () => {
 */
 
 import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill.js";
+import toArray from "./utils/toArray.js";
 
 class Draw {
     /**
@@ -472,7 +473,7 @@ HTMLElement.prototype.resetStyle = function(){
 }
 
 function caracteristicsChildren() {
-    return Array.from(document.querySelector("#caracteristics").children);
+    return toArray(document.querySelector("#caracteristics").children);
 }
 
 function showTextCaracteristics() {

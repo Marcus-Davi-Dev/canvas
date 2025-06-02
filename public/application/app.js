@@ -1,4 +1,6 @@
 import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill.js";
+import toArray from "./utils/toArray.js";
+import DuplicatedIDError from "./classes/DuplicatedIDError.js";
 
 const inputModal = document.createElement("dialog");
 document.body.appendChild(inputModal);
@@ -40,8 +42,8 @@ sharedWorker.port.onmessage = async (ev) => {
         if (msg.result === "success") {
             inputModal.close();
             renderDrawing({ name: msg.drawing.name, img: msg.drawing.img, favorited: msg.drawing.favorited });
-            if (inputModal.querySelector("#aviso-input-invalido")) {
-                inputModal.querySelector("#aviso-input-invalido").remove();
+            if (inputModal.querySelector("#error")) {
+                inputModal.querySelector("#error").remove();
             }
             // atualiza o contador de desenhos da seção em que o desenho foi criado.
             if (msg.drawing.favorited) {
@@ -51,12 +53,7 @@ sharedWorker.port.onmessage = async (ev) => {
                 incrementDrawingCounter(asideSelectedSection, 1);
             }
         } else {
-            const advice = document.createElement("span");
-            advice.innerHTML = `<br> ${msg.errorMsg} <br>`;
-            advice.id = "aviso-input-invalido";
-            advice.setAttribute("role", "alert");
-            advice.style.color = "red";
-            inputModal.insertBefore(advice, inputModal.querySelector("div"));
+            setInputModalErrorMessage(errorMsg);
         }
     }
     else if (msg.type === "delete drawing") {
@@ -241,7 +238,7 @@ function renderDrawing(infos) {
     drawing.classList.add("drawing");
 
     const a = document.createElement("a");
-    a.href = `canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
+    a.href = `../../../canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
     const img = document.createElement("img");
     img.src = URL.createObjectURL(infos.img);
     img.onload = function () {
@@ -533,7 +530,7 @@ async function showInputModal(type, options) {
             ids.forEach(function (id, index) {
                 if (ids.lastIndexOf(id) !== index) {
                     inputModalError();
-                    throw new Error("The id of an option must be unique.");
+                    throw new DuplicatedIDError("The id of an option must be unique.");
                 }
             });
 
@@ -556,10 +553,13 @@ async function showInputModal(type, options) {
                 option.classList.add("option");
                 wrraper.classList.add("flex-column");
                 title.textContent = options.selectOptions[i].label;
-
-                option.setAttribute("data-id", options.selectOptions[index].id);
+                
+                title.id = `option-{i + 1}`;
+                option.setAttribute("aria-labelledby", title.id);
+                option.setAttribute("id", options.selectOptions[index].id);
                 // option click event listener
                 option.addEventListener("click", function () {
+                    selectList.setAttribute("aria-activedescendant", this.id);
                     selectList.querySelector("[aria-selected='true']").setAttribute("aria-selected", "false");
                     this.setAttribute("aria-selected", "true");
                 });
@@ -831,8 +831,4 @@ function deleteDrawing(name, section) {
     removeDrawing(name);
     // deve ser feito no onmessage do Shared Worker.
     // decrementDrawingCounter(section, 1);
-}
-
-function toArray(iterable) {
-    return Array.from(iterable);
 }

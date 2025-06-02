@@ -64,7 +64,7 @@ function addOnMessage(port){
                 });
             } else {
                 console.log(`SharedWorker: drawing created with name ${msg.name}.`);
-                const imgBlob = await Drawing.stringImgToBlob("https://marcus-davi-dev.github.io/canvas/images/blank_image.png");
+                const imgBlob = await Drawing.stringImgToBlob("https://marcus-davi-dev.github.io/canvas/public/images/blank_image.png");
                 if (msg.section === "favoritados") {
                     const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
                     objectStores.objectStore("favoritados").add(Drawing.create(name, imgBlob, true));
@@ -89,7 +89,7 @@ function addOnMessage(port){
                 const objectStores = db.transaction(["favoritados", "tudo"], "readwrite");
                 objectStores.onerror = (err) => {
                     console.log(`Ocorreu um error tentando excluir o desenho ${msg.name}.`, err);
-                    port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentano excluir o desenho ${msg.name}.` });
+                    port.postMessage({ type: "delete drawing", result: "error", errorMsg: `Ocorreu um error tentando excluir o desenho ${msg.name}.` });
                 }
                 objectStores.objectStore("favoritados").delete(msg.name);
                 const secaoTudoDeleteRequest = objectStores.objectStore("tudo").delete(msg.name);
