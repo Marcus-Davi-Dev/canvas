@@ -1,9 +1,25 @@
-import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill.js";
-import toArray from "./utils/toArray.js";
-import DuplicatedIDError from "./classes/DuplicatedIDError.js";
+import SharedWorkerPolyfill from "../polyfill/SharedWorkerPolyfill.js";
+import toArray from "../utils/toArray.js";
 
-const inputModal = document.createElement("dialog");
-document.body.appendChild(inputModal);
+/** this dialog is a WebComponent (as you see by the "is='input-modal'") and have these
+   methods:
+   - (async) showInputModal: shows the modal with some dinamycally placed elements to
+            receive the input of the user. Takes 2 arguments, type and options.
+            type is a string, currently 1 of these 4 options: input, multiple input,
+            confirm and select (is not multi-selectable).
+            options is a object to "configure" the dialog, like puttting a title
+            a message, label, etc.
+            return the input the user gave.
+   - errorMode: all the content of the modal (except the buttons, of course) is replaced
+            with a message of error, use when are given not-expected parameters, info,
+            things like that. Takes no arguments.
+   - setErrorMessage: set the error message of the dialog, can be to set the error message
+            in the error mode and when the user try to give a invalid input. Takes 1
+            argument, message, that will be the error message.
+   - clear: clear the dialog, leaving only the buttons and the error message behind.
+            Takes no arguments.
+*/
+const inputModal = document.querySelector("dialog[is='input-modal']");
 
 const newDrawingBtn = document.querySelector("div#new-drawing");
 const drawings = document.querySelector("div#drawings");
@@ -42,8 +58,8 @@ sharedWorker.port.onmessage = async (ev) => {
         if (msg.result === "success") {
             inputModal.close();
             renderDrawing({ name: msg.drawing.name, img: msg.drawing.img, favorited: msg.drawing.favorited });
-            if (inputModal.querySelector("#error")) {
-                inputModal.querySelector("#error").remove();
+            if (!inputModal.shadowRoot.querySelector("#error-message").classList.contains("hidden")) {
+                inputModal.querySelector("#error-message").classList.add("hidden");
             }
             // atualiza o contador de desenhos da seção em que o desenho foi criado.
             if (msg.drawing.favorited) {
@@ -53,7 +69,7 @@ sharedWorker.port.onmessage = async (ev) => {
                 incrementDrawingCounter(asideSelectedSection, 1);
             }
         } else {
-            setInputModalErrorMessage(errorMsg);
+            inputModal.setErrorMessage(errorMsg);
         }
     }
     else if (msg.type === "delete drawing") {
@@ -167,7 +183,7 @@ sharedWorker.port.onmessage = async (ev) => {
         let imgJPG;
         canvas.toBlob((blob) => { imgJPG = URL.createObjectURL(blob) });
 
-        const selectedOption = await showInputModal("select", {
+        const selectedOption = await inputModal.showInputModal("select", {
             selectOptions: [
                 {
                     label: "Formato PNG",
@@ -238,7 +254,7 @@ function renderDrawing(infos) {
     drawing.classList.add("drawing");
 
     const a = document.createElement("a");
-    a.href = `../../../canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
+    a.href = `./../canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
     const img = document.createElement("img");
     img.src = URL.createObjectURL(infos.img);
     img.onload = function () {
@@ -332,324 +348,11 @@ function renderDrawing(infos) {
     return drawing;
 }
 
-async function showInputModal(type, options) {
-    // create here because of every switch-case case scope
-    // and because if the function returned the result in
-    // the switch-case the later code would not execute.
-    let result;
-
-    inputModal.showModal();
-    clearInputModal();
-
-    const btns = document.createElement("div");
-    btns.id = "buttons";
-    btns.style.display = "flex";
-    btns.style.justifyContent = "flex-end";
-
-    // the buttons that will cancel ou confirm to send the input.
-    const cancelBtn = document.createElement("button");
-    cancelBtn.textContent = "CANCELAR";
-    const confirmBtn = document.createElement("button");
-    confirmBtn.textContent = "OK";
-
-    // values for options
-    /*const options = {
-        title: string,
-        message?: string,
-        label?: string,
-        labels?: string[],
-        inputAmount: number,
-        selectOptions: { // the options for the select type.
-            label: string,
-            description?: string,
-            id: string
-        }[]
-    };*/
-
-    const error = document.createElement("span");
-    error.id = "error";
-
-    if (options.title) {
-        const title = document.createElement("h3");
-        title.style.margin = "2px 0";
-        title.textContent = options.title;
-        inputModal.appendChild(title);
-    }
-
-    // some message to the user ou description of the form.
-    if (options.message) {
-        const message = document.createElement("span");
-        message.innerHTML = options.message;
-        inputModal.appendChild(message);
-    }
-
-    // add the part of the modal that will actually receive the input.
-    switch (type) {
-        // from 'options' uses if possible label
-        case "input":
-            inputModal.classList.add("input-modal");
-
-            const input = document.createElement("input");
-            // prevent the form default action.
-            input.addEventListener("keydown", function(ev){
-                if(ev.key === "Enter"){
-                    ev.preventDefault();
-                }
-            });
-
-            // scope for the form variable.
-            (function () {
-                const form = document.createElement("form");
-                if (options.label) {
-                    const label = document.createElement("label");
-                    label.textContent = options.label;
-                    label.htmlFor = "input";
-                    input.id = "input";
-
-                    const wrraper = document.createElement("div");
-                    wrraper.classList.add("flex-column");
-                    wrraper.appendChild(label);
-                    wrraper.appendChild(input);
-                    form.appendChild(wrraper);
-                } else {
-                    form.appendChild(input);
-                }
-                form.appendChild(btns);
-                inputModal.appendChild(form);
-
-                input.focus();
-            })();
-
-            result = new Promise((resolve, reject) => {
-                confirmBtn.addEventListener('click', function (ev) {
-                    ev.preventDefault();
-
-                    resolve(input.value);
-                });
-
-                cancelBtn.addEventListener('click', function (ev) {
-                    ev.preventDefault();
-
-                    inputModal.close();
-                    reject(new Error("A operação foi cancelada."));
-                });
-            });
-            break;
-        // from 'options' uses inputAmount and if possible labels
-        case "multiple input":
-            inputModal.classList.add("input-modal");
-
-            if (options.inputAmount > options.labels.length) {
-                console.warn(`Were passed more inputs (${options.inputAmount}) than labels (${options.labels.length}) to the input modal. The remaining inputs will not be shown. ${options.inputAmount - options.labels.length} inputs excluded.`);
-                options.inputAmount = options.labels.length;
-            } else if (options.inputAmount < options.labels.length) {
-                console.warn(`Were passed more labels (${options.inputAmount}) than inputs (${options.labels.length}) to the input modal. The remaining labels will not be shown. ${options.labels.length - options.inputAmount} labels excluded.`);
-            }
-
-            // scope for the form variable.
-            (function () {
-                const form = document.createElement("form");
-                for (let i = 0; i < options.inputAmount; i++) {
-                    const input = document.createElement("input");
-                    // prevent the form default action.
-                    input.addEventListener("keydown", function(ev){
-                        if(ev.key === "Enter"){
-                            ev.preventDefault();
-                        }
-                    });
-                    if (!options.labels.length) {
-                        form.appendChild(input);
-                    } else {
-                        const wrraper = document.querySelector("div");
-                        wrraper.classList.add("flex-column");
-
-                        const label = document.createElement("label");
-                        label.textContent = options.labels[i];
-                        label.id = `input-${i + 1}`;
-                        input.id = `input-${i + 1}`;
-
-                        wrraper.appendChild(label);
-                        wrraper.appendChild(input);
-                        form.appendChild(wrraper);
-                    }
-                }
-                form.appendChild(btns);
-                inputModal.appendChild(form);
-            })();
-
-            result = new Promise((resolve, reject) => {
-                confirmBtn.addEventListener('click', function (ev) {
-                    ev.preventDefault();
-
-                    const values = [];
-                    for (let i = 0; i < inputModal.querySelectorAll("input").length; i++) {
-                        values.push(inputModal.querySelectorAll("input")[i].value);
-                    }
-                    resolve(values);
-                });
-
-                cancelBtn.addEventListener('click', function (ev) {
-                    ev.preventDefault();
-
-                    inputModal.close();
-                    reject(new Error("A operação foi cancelada."));
-                });
-            });
-            break;
-        // from 'options' uses nothing
-        case "confirm":
-            result = new Promise((resolve) => {
-                confirmBtn.addEventListener('click', function (ev) {
-                    ev.preventDefault();
-
-                    resolve(true);
-                });
-
-                cancelBtn.addEventListener('click', function (ev) {
-                    ev.preventDefault();
-
-                    inputModal.close();
-                    resolve(false);
-                });
-            });
-
-            break;
-        // from 'options' uses selectedOptions[n].id, selectedOptions[n].label
-        // and if possible selectedOptions[n].description and selectedOptions[n].images[n]
-        case "select":
-            // check ids and labels
-            let ids = [];
-            options.selectOptions.forEach(function (item) {
-                if (item.id === undefined) {
-                    inputModalError();
-                    throw new TypeError("All the options must have an id.");
-                }
-                ids.push(item.id);
-            });
-
-            ids.forEach(function (id, index) {
-                if (ids.lastIndexOf(id) !== index) {
-                    inputModalError();
-                    throw new DuplicatedIDError("The id of an option must be unique.");
-                }
-            });
-
-            ids.forEach(function (item, index) {
-                if (options.selectOptions[index].label === undefined) {
-                    inputModalError();
-                    throw new TypeError("All the options must have a label.");
-                }
-            });
-            // end of check
-
-            const selectList = document.createElement("ul");
-            selectList.role = "listbox";
-
-            for (let i = 0; i < options.selectOptions.length; i++) {
-                const option = document.createElement("li");
-                const wrraper = document.createElement("div");
-                const title = document.createElement("span");
-
-                option.classList.add("option");
-                wrraper.classList.add("flex-column");
-                title.textContent = options.selectOptions[i].label;
-                
-                title.id = `option-{i + 1}`;
-                option.setAttribute("aria-labelledby", title.id);
-                option.setAttribute("id", options.selectOptions[index].id);
-                // option click event listener
-                option.addEventListener("click", function () {
-                    selectList.setAttribute("aria-activedescendant", this.id);
-                    selectList.querySelector("[aria-selected='true']").setAttribute("aria-selected", "false");
-                    this.setAttribute("aria-selected", "true");
-                });
-
-                wrraper.appendChild(title);
-                // if there is a description, add it.
-                if (options.selectOptions[i].description) {
-                    const description = document.createElement("span");
-                    description.textContent = options.selectOptions[i].description;
-                    wrraper.appendChild(description);
-                }
-                option.appendChild(wrraper);
-                // the same thing with images.
-                if (options.selectOptions[i].images.length) {
-                    options.selectOptions[i].images.forEach(function (src) {
-                        const image = document.createElement("img");
-                        image.src = src;
-                        option.appendChild(image);
-                    });
-                }
-                selectList.appendChild(option);
-            }
-
-            result = new Promise((resolve, reject) => {
-                confirmBtn.addEventListener('click', function () {
-                    resolve(selectList.querySelector("[aria-selected='true']").getAttribute("data-id"));
-                });
-
-                cancelBtn.addEventListener('click', function () {
-                    inputModal.close();
-                    reject(new Error("A operação foi cancelada."));
-                });
-            });
-
-            break;
-    }
-
-    inputModal.appendChild(error);
-    btns.appendChild(cancelBtn);
-    btns.appendChild(confirmBtn);
-    if (!inputModal.querySelector("form")) {
-        inputModal.appendChild(btns);
-    }
-
-    return result;
-}
-
-// parameters error or something like this.
-// errors that are about the internal logic of the modal.
-function inputModalError() {
-    clearInputModal(false);
-    inputModal.classList.add("error");
-
-    const h1 = document.createElement("h1");
-    h1.textContent = "Erro!";
-    h1.margin = "auto";
-    const message = document.createElement("p");
-    message.innerHTML = "Um erro ocorreu durante a construção deste elemento.<br> Olhe o console para mais informações.";
-
-    inputModal.appendChild(h1);
-    inputModal.appendChild(message);
-    // remove the "cancel" button to only have the confirm.
-    inputModal.querySelector("#buttons").children[0].remove();
-    inputModal.querySelector("#buttons").style.justifyContent = "flex-end";
-}
-
-// input errors or something like this.
-// errors that are about the input the user gave.
-function setInputModalErrorMessage(message) {
-    inputModal.querySelector("#error").textContent = message;
-}
-
-function clearInputModal(noButtons = true) {
-    if (noButtons) {
-        inputModal.innerHTML = "";
-    } else {
-        toArray(inputModal.children).forEach(function (child) {
-            if (child.id !== "buttons") {
-                child.remove();
-            }
-        });
-    }
-    inputModal.classList.forEach((className) => { inputModal.classList.remove(className); });
-}
-
 newDrawingBtn.addEventListener('click', async function () {
     sharedWorker.port.postMessage({
         type: "create drawing",
         name:
-            await showInputModal("input", {
+            await inputModal.showInputModal("input", {
                 title: `Novo desenho à ${asideSelectedSection[0].toUpperCase() + asideSelectedSection.substring(1)}`,
                 label: "Nome do desenho."
             }),
