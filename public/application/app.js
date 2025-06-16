@@ -1,5 +1,4 @@
 import SharedWorkerPolyfill from "../polyfill/SharedWorkerPolyfill.js";
-import toArray from "../utils/toArray.js";
 
 /** this dialog is a WebComponent (as you see by the "is='input-modal'") and have these
    methods:
