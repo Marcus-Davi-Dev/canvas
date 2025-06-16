@@ -260,8 +260,21 @@ dialog::backdrop {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
-dialog input {
+dialog.input-modal input {
     width: 100%;
+}
+
+dialog.input-modal label {
+    color: lightgray;
+}
+
+dialog.input-modal label + input:focus {
+    color: var(--primary-font-color);
+}
+
+dialog.input-modal .flex-column {
+    display: flex;
+    flex-direction: column;
 }
 
 dialog button {
@@ -281,28 +294,37 @@ dialog button:last-of-type {
     background-color: green;
 }
 
-dialog .option {
+dialog #error {
+    color: red;
+}
+
+dialog.select-modal [role="option"] {
     width: 100%;
     display: flex;
     justify-content: space-between;
     margin: 0 0 20px 0;
     border-radius: 4px;
-    transition: all .3s;
+    transition: box-shadow .3s;
 }
 
-dialog .option img {
+dialog.select-modal [role="option"] img {
     max-width: 20%;
     min-width: 80px;
     border-radius: 7px;
 }
 
-dialog .option:last-of-type {
+dialog.select-modal [role="option"]:last-of-type {
     margin: 0;
 }
 
-dialog .option[data-selected] {
+dialog.select-modal [role="option"][aria-selected="true"] {
     box-shadow: green 0 0 9px 5px;
-} 
+}
+
+dialog.select-modal .option>.flex-column>span:first-of-type {
+    font-size: 1.4em;
+    font-weight: bold;
+}
 
 @media screen and (max-width: 400px) {
     body>.wrraper aside {

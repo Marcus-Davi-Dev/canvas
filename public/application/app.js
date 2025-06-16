@@ -1,7 +1,24 @@
-import SharedWorkerPolyfill from "./polyfill/SharedWorkerPolyfill.js";
+import SharedWorkerPolyfill from "../polyfill/SharedWorkerPolyfill.js";
 
-const inputModal = document.createElement("dialog");
-document.body.appendChild(inputModal);
+/** this dialog is a WebComponent (as you see by the "is='input-modal'") and have these
+   methods:
+   - (async) showInputModal: shows the modal with some dinamycally placed elements to
+            receive the input of the user. Takes 2 arguments, type and options.
+            type is a string, currently 1 of these 4 options: input, multiple input,
+            confirm and select (is not multi-selectable).
+            options is a object to "configure" the dialog, like puttting a title
+            a message, label, etc.
+            return the input the user gave.
+   - errorMode: all the content of the modal (except the buttons, of course) is replaced
+            with a message of error, use when are given not-expected parameters, info,
+            things like that. Takes no arguments.
+   - setErrorMessage: set the error message of the dialog, can be to set the error message
+            in the error mode and when the user try to give a invalid input. Takes 1
+            argument, message, that will be the error message.
+   - clear: clear the dialog, leaving only the buttons and the error message behind.
+            Takes no arguments.
+*/
+const inputModal = document.querySelector("dialog[is='input-modal']");
 
 const newDrawingBtn = document.querySelector("div#new-drawing");
 const drawings = document.querySelector("div#drawings");
@@ -29,9 +46,9 @@ const asideExtendedPlusWidth = "200px";
 const sharedWorker = new SharedWorkerPolyfill("sharedWorker.js");
 sharedWorker.onerror = (err) => {
     console.log("SharedWorker error:", err);
-}
+};
 
-sharedWorker.port.onmessage = (ev) => {
+sharedWorker.port.onmessage = async (ev) => {
     const msg = ev.data;
 
     // utilizarei ifs e else ifs para manter o escopo em cada if,
@@ -40,23 +57,18 @@ sharedWorker.port.onmessage = (ev) => {
         if (msg.result === "success") {
             inputModal.close();
             renderDrawing({ name: msg.drawing.name, img: msg.drawing.img, favorited: msg.drawing.favorited });
-            if (inputModal.querySelector("#aviso-input-invalido")) {
-                inputModal.querySelector("#aviso-input-invalido").remove();
+            if (!inputModal.shadowRoot.querySelector("#error-message").classList.contains("hidden")) {
+                inputModal.querySelector("#error-message").classList.add("hidden");
             }
             // atualiza o contador de desenhos da seção em que o desenho foi criado.
-            if(msg.drawing.favorited){
+            if (msg.drawing.favorited) {
                 incrementDrawingCounter("tudo", 1);
                 incrementDrawingCounter("favoritados", 1);
-            }else{
+            } else {
                 incrementDrawingCounter(asideSelectedSection, 1);
             }
         } else {
-            const advice = document.createElement("span");
-            advice.innerHTML = `<br> ${msg.errorMsg} <br>`;
-            advice.id = "aviso-input-invalido";
-            advice.setAttribute("role", "alert");
-            advice.style.color = "red";
-            inputModal.insertBefore(advice, inputModal.querySelector("div"));
+            inputModal.setErrorMessage(errorMsg);
         }
     }
     else if (msg.type === "delete drawing") {
@@ -65,10 +77,10 @@ sharedWorker.port.onmessage = (ev) => {
             return;
         }
 
-        if(msg.favorited){
+        if (msg.favorited) {
             decrementDrawingCounter("tudo", 1);
             decrementDrawingCounter("favoritados", 1);
-        }else{
+        } else {
             decrementDrawingCounter(asideSelectedSection, 1);
         }
     }
@@ -124,169 +136,89 @@ sharedWorker.port.onmessage = (ev) => {
             incrementDrawingCounter("arquivados", 1);
             decrementDrawingCounter("tudo", 1);
             removeDrawing(msg.name);
-        }else{
+        } else {
             decrementDrawingCounter("arquivados", 1);
             incrementDrawingCounter("tudo", 1);
             removeDrawing(msg.name);
         }
     }
     else if (msg.type === "export drawing") {
-        inputModal.showModal();
-        inputModal.innerHTML = "";
-        inputModal.setAttribute("data-input-modal", "exportar desenho");
+        const img = new Image();
+        img.src = URL.createObjectURL(msg.img);
+        await new Promise((resolve) => { img.onload = () => { resolve() } });
 
-        const title = document.createElement("h2");
-        title.textContent = "Exportar desenho";
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
 
-        const option1 = document.createElement("div");
-        option1.classList.add("option");
-        const texto1 = document.createElement("div");
-        const titulo1 = document.createElement("h3");
-        titulo1.textContent = "PNG";
-        const descricao1 = document.createElement("p");
-        descricao1.textContent = "Formato PNG. Imagem sem fundo.";
-
-        const option2 = document.createElement("div");
-        option2.classList.add("option");
-        const texto2 = document.createElement("div");
-        const titulo2 = document.createElement("h3");
-        titulo2.textContent = "JPG";
-        const descricao2 = document.createElement("p");
-        descricao2.textContent = "Formato JPG. Imagem com fundo branco.";
-
-        option1.addEventListener("click", function () {
-            if (this.getAttribute("data-selected")) {
-                this.removeAttribute("data-selected");
-            } else {
-                this.setAttribute("data-selected", "true");
-                option2.removeAttribute("data-selected");
-            }
-        })
-
-        option2.addEventListener("click", function () {
-            if (this.getAttribute("data-selected")) {
-                this.removeAttribute("data-selected");
-            } else {
-                this.setAttribute("data-selected", "true");
-                option1.removeAttribute("data-selected");
-            }
-        })
-
-        inputModal.appendChild(title);
-        inputModal.appendChild(option1);
-        option1.appendChild(texto1);
-        texto1.appendChild(titulo1);
-        texto1.appendChild(descricao1);
-
-        inputModal.appendChild(option2);
-        option2.appendChild(texto2);
-        texto2.appendChild(titulo2);
-        texto2.appendChild(descricao2);
-
-        // imagens de demonstração
-        const imgPNG = document.createElement("img");
-        imgPNG.src = URL.createObjectURL(msg.img);
-        const imgJPG = document.createElement("img");
-        imgJPG.src = imgPNG.src;
-        imgJPG.addEventListener("load", function () {
-            URL.revokeObjectURL(imgJPG.src);
-        });
-
-        imgPNG.classList.add("png"); // fundo quadriculado de imagens PNG.
-        imgJPG.classList.add("jpeg"); // para simular uma imagem JPG com fundo branco.
-
-        option1.appendChild(imgPNG);
-        option2.appendChild(imgJPG);
-
-        // botões de confirmação e cancelamento da exportação.
-        const confirmBtn = document.createElement("button");
-        confirmBtn.textContent = "OK";
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "Cancelar";
-        cancelBtn.onclick = function () { inputModal.close() };
-        confirmBtn.onclick = function () {
-            let url;
-
-            const a = document.createElement("a");
-            document.body.appendChild(a);
-
-            if (option1.getAttribute("data-selected")) { // img png
-                // usar typeof em um blob retorna 'object'
-                if (typeof msg.img === typeof {}) {
-                    a.href = URL.createObjectURL(msg.img);
-                    url = a.href;
-                    a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
-                    a.download = msg.name;
-                    a.click();
-                    setTimeout(function () {
-                        a.remove();
-                        URL.revokeObjectURL(url);
-                    }, 50);
-                } else {
-                    const canvas = document.createElement("canvas");
-                    const img = new Image();
-                    img.src = msg.img;
-                    canvas.height = img.height;
-                    canvas.width = img.width;
-                    canvas.getContext("2d").drawImage(img, 0, 0);
-                    canvas.toBlob((blob) => {
-                        a.href = URL.createObjectURL(blob);
-                        url = a.href;
-                        a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
-                        a.download = msg.name;
-                        a.click();
-                        setTimeout(function () {
-                            a.remove();
-                            URL.revokeObjectURL(url);
-                        }, 50);
-                    })
-                }
-            } else if (option2.getAttribute("data-selected")) {
-                const img = new Image();
-                // usar typeof em um blob retorna 'object'
-                if (typeof msg.img === typeof {}) {
-                    url = URL.createObjectURL(msg.img);
-                    img.src = url;
-                } else {
-                    img.src = msg.img;
-                }
-                document.body.appendChild(img);
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.height = img.height;
-                    canvas.width = img.width;
-                    img.remove();
-                    const ctx = canvas.getContext("2d");
-                    // fazer a imagem ter fundo branco.
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(0, canvas.height);
-                    ctx.lineTo(canvas.width, canvas.height);
-                    ctx.lineTo(canvas.width, 0);
-                    ctx.lineTo(0, 0);
-                    ctx.fillStyle = "white";
-                    ctx.fill();
-
-                    ctx.drawImage(img, 0, 0);
-                    if (url) {
-                        URL.revokeObjectURL(url);
-                    }
-                    canvas.toBlob((blob) => {
-                        url = URL.createObjectURL(blob);
-                        a.href = url;
-                        a.textContent = "DOWNLOAD"; // apenas para que o link tenha um width.
-                        a.download = msg.name;
-                        a.click();
-                        setTimeout(function () {
-                            a.remove();
-                            URL.revokeObjectURL(url);
-                        });
-                    });
-                }
+        // png quadriculated background
+        // the gray squares will have 10px width and height
+        ctx.fillStyle = "gray";
+        for (let x = 0; x <= canvas.width; x += 10) {
+            for (let y = 0; y <= canvas.height; y += 10) {
+                ctx.fillRect(x, y, 10, 10);
             }
         }
 
-        inputModal.appendChild(cancelBtn);
-        inputModal.appendChild(confirmBtn);
+        ctx.drawImage(img, 0, 0);
+
+        let imgPNG;
+        canvas.toBlob((blob) => { imgPNG = URL.createObjectURL(blob) });
+
+        // clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // give the canvas a white background to replace
+        // the transparent one
+        ctx.fillStyle = "white";
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, canvas.height);
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(canvas.width, 0);
+        ctx.lineTo(0, 0);
+        ctx.fill();
+
+        let imgJPG;
+        canvas.toBlob((blob) => { imgJPG = URL.createObjectURL(blob) });
+
+        const selectedOption = await inputModal.showInputModal("select", {
+            selectOptions: [
+                {
+                    label: "Formato PNG",
+                    description: "Imagem sem fundo.",
+                    id: "PNG",
+                    images: [imgPNG]
+                },
+                {
+                    label: "Formato JPEG",
+                    description: "Imagem com fundo branco.",
+                    id: "JPEG",
+                    images: [imgJPG]
+                }
+            ]
+        });
+
+        URL.revokeObjectURL(imgPNG);
+        URL.revokeObjectURL(imgJPG);
+
+        if (selectedOption) {
+            const a = document.createElement("a");
+            document.body.appendChild(a);
+            a.download = msg.name;
+
+            switch (selectedOption.id) {
+                case "PNG":
+                    a.href = imgPNG;
+                    break;
+                case "JPEG":
+                    a.href = imgJPG;
+                    break;
+            }
+
+            a.click();
+            a.remove();
+        }
     } else if (msg.type === "search drawings") {
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
         for (let i = 0; i < msg.drawings.length; i++) {
@@ -309,7 +241,7 @@ sharedWorker.port.onmessage = (ev) => {
     } else if (msg.type === "DBerror") {
         alert("Ocorreu um erro no banco de dados, tente recarregar a página");
     }
-}
+};
 
 /**
  * @param {Object} infos * name: nome do desenho
@@ -321,12 +253,12 @@ function renderDrawing(infos) {
     drawing.classList.add("drawing");
 
     const a = document.createElement("a");
-    a.href = `canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
+    a.href = `./../canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
     const img = document.createElement("img");
     img.src = URL.createObjectURL(infos.img);
     img.onload = function () {
         URL.revokeObjectURL(img.src);
-    }
+    };
     img.style.width = "100%";
     img.style.height = "78%";
     img.classList.add("png"); // fundo quadriculado de imagens PNG.
@@ -385,7 +317,7 @@ function renderDrawing(infos) {
     // primeira opção
     options.querySelectorAll("button")[0].addEventListener('click', function () {
         deleteDrawing(infos.name, asideSelectedSection);
-    })
+    });
 
     drawing.appendChild(a);
     drawing.appendChild(info);
@@ -415,61 +347,15 @@ function renderDrawing(infos) {
     return drawing;
 }
 
-async function showInputModal(options) {
-    inputModal.showModal();
-    inputModal.innerHTML = "";
-    inputModal.setAttribute("data-input-modal", "criar desenho");
-
-    const title = document.createElement("h3");
-    title.style.margin = "2px 0";
-    title.textContent = options.title || "";
-
-    const input = document.createElement("input");
-
-    const btns = document.createElement("div");
-    btns.style.display = "flex";
-    btns.style.justifyContent = "flex-end";
-
-    const cancelBtn = document.createElement("button");
-    cancelBtn.textContent = "CANCELAR";
-    const confirmBtn = document.createElement("button");
-    confirmBtn.textContent = "OK";
-
-    const result = new Promise((resolve, reject) => {
-        confirmBtn.addEventListener('click', async function () {
-            sharedWorker.port.postMessage({ type: "create drawing", name: input.value, section: asideSelectedSection });
-            resolve(input.value);
-        });
-
-        cancelBtn.addEventListener('click', function () {
-            inputModal.close();
-            reject(new Error("A operação foi abortada."));
-        });
-    });
-
-    inputModal.appendChild(title);
-
-    if (options.description) {
-        const description = document.createElement("span");
-        description.innerHTML = options.description;
-        inputModal.appendChild(description);
-        // quebra de linha.
-        inputModal.appendChild(document.createElement("br"));
-    }
-
-    inputModal.appendChild(input);
-    inputModal.appendChild(btns);
-    btns.appendChild(cancelBtn);
-    btns.appendChild(confirmBtn);
-    input.focus();
-
-    return result;
-}
-
-newDrawingBtn.addEventListener('click', function () {
-    showInputModal({
-        title: `Novo desenho à ${asideSelectedSection[0].toUpperCase() + asideSelectedSection.substring(1)}`,
-        description: "Nome do desenho."
+newDrawingBtn.addEventListener('click', async function () {
+    sharedWorker.port.postMessage({
+        type: "create drawing",
+        name:
+            await inputModal.showInputModal("input", {
+                title: `Novo desenho à ${asideSelectedSection[0].toUpperCase() + asideSelectedSection.substring(1)}`,
+                label: "Nome do desenho."
+            }),
+        section: asideSelectedSection
     });
 });
 
@@ -487,12 +373,12 @@ for (let i = 0; i < asideSections.length; i++) {
             asideSections[j].setAttribute("aria-selected", "false");
         }
         this.setAttribute("aria-selected", "true");
-    })
+    });
 }
 searchBtn.addEventListener('click', function (ev) {
     ev.preventDefault();
     sharedWorker.port.postMessage({ type: "search drawings", section: asideSelectedSection, search: searchInput.value });
-})
+});
 
 window.onresize = updateDrawingsMenuPosition;
 
@@ -510,14 +396,14 @@ more.addEventListener('click', function () {
     }
 
     setTimeout(updateDrawingsMenuPosition, 1000);
-})
+});
 
 closeConfigMenuBtn.addEventListener('click', hideConfigMenu);
 configBtn.addEventListener('click', showConfigMenu);
 drawingsCounterCheckbox.addEventListener('click', toggleDrawingsCounter);
 themeSelector.addEventListener('change', function () {
     changeTheme(this.value);
-})
+});
 
 function showConfigMenu() {
     asideSections[0].parentNode.classList.add("hidden");
