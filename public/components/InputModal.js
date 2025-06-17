@@ -50,10 +50,12 @@ export default class InputModal extends HTMLDialogElement {
     }
 
     connectedCallback() {
-        this.shadow = this.attachShadow({ mode: "open" });
         const style = document.createElement("style");
+        // in our especific case, there will be only 1 InputModal,
+        // so this style adding isnt a problem, but if had many i
+        // think that would be a problem.
         style.textContent = `
-        :host {
+        dialog {
             padding: 14px;
             border-radius: 7px;
             background-color: var(--primary-background-color);
@@ -62,20 +64,20 @@ export default class InputModal extends HTMLDialogElement {
             box-shadow: 0px 0px 20px 3px black;
         }
 
-        :host::backdrop {
+        dialog::backdrop {
             background-color: rgba(0, 0, 0, 0.4);
         }
 
-        :host.input-modal input {
+        dialog.input-modal input {
             width: 100%;
         }
 
-        :host.input-modal .flex-column {
+        dialog.input-modal .flex-column {
             display: flex;
             flex-direction: column;
         }
 
-        :host button {
+        dialog button {
             border: none;
             border-radius: 99px;
             padding: 2px 6px;
@@ -84,23 +86,23 @@ export default class InputModal extends HTMLDialogElement {
             color: var(--primary-font-color);
         }
 
-        :host button:first-of-type {
+        dialog button:first-of-type {
             background-color: red;
         }
 
-        :host button:last-of-type {
+        dialog button:last-of-type {
             background-color: green;
         }
 
-        :host #error-message {
+        dialog #error-message {
             color: red;
         }
 
-        :host.select-modal ul[role="listbox"] {
+        dialog.select-modal ul[role="listbox"] {
             padding: 0;
         }
 
-        :host.select-modal ul[role="listbox"] li {
+        dialog.select-modal ul[role="listbox"] li {
             list-style: none;
             width: 100%;
             display: flex;
@@ -111,27 +113,27 @@ export default class InputModal extends HTMLDialogElement {
             transition: box-shadow .3s;
         }
 
-        :host.select-modal ul[role="listbox"] li img {
+        dialog.select-modal ul[role="listbox"] li img {
             max-width: 20%;
             min-width: 80px;
             border-radius: 7px;
         }
 
-        :host.select-modal ul[role="listbox"] li:last-of-type {
+        dialog.select-modal ul[role="listbox"] li:last-of-type {
             margin: 0;
         }
 
-        :host.select-modal ul[role="listbox"] li[aria-selected="true"] {
+        dialog.select-modal ul[role="listbox"] li[aria-selected="true"] {
             box-shadow: green 0 0 9px 5px;
         }
 
-        :host.select-modal [role="option"]>.flex-column>span:first-of-type {
+        dialog.select-modal [role="option"]>.flex-column>span:first-of-type {
             font-size: 1.3em;
             font-weight: bold;
         }
         `;
 
-        this.shadow.appendChild(style);
+        this.appendChild(style);
 
         const btns = document.createElement("div");
         btns.id = "input-modal-buttons";
@@ -146,10 +148,10 @@ export default class InputModal extends HTMLDialogElement {
         const errorMessage = document.createElement("span");
         errorMessage.id = "error-message";
 
-        this.shadow.appendChild(errorMessage);
+        this.appendChild(errorMessage);
         btns.appendChild(cancelBtn);
         btns.appendChild(confirmBtn);
-        this.shadow.appendChild(btns);
+        this.appendChild(btns);
 
         this.confirmBtn = confirmBtn;
         this.cancelBtn = cancelBtn;
@@ -161,12 +163,12 @@ export default class InputModal extends HTMLDialogElement {
      */
     clear() {
         this.classList.forEach((className) => { this.classList.remove(className); });
-        for (let i = 0; i < this.shadow.children.length; i++) {
-            if (this.shadow.children[i].id === "input-modal-buttons" || this.shadow.children[i].id === "error-message") {
+        for (let i = 0; i < this.children.length; i++) {
+            if (this.children[i].id === "input-modal-buttons" || this.children[i].id === "error-message") {
                 continue;
             }
 
-            this.shadow.children[i].remove();
+            this.children[i].remove();
         }
     }
 
@@ -175,7 +177,7 @@ export default class InputModal extends HTMLDialogElement {
      * @param {String} message The error message.
      */
     setErrorMessage(message) {
-        this.shadow.querySelector("#error-message").textContent = message;
+        this.querySelector("#error-message").textContent = message;
     }
 
     /**
@@ -187,7 +189,7 @@ export default class InputModal extends HTMLDialogElement {
 
         const title = document.createElement("h1");
         title.textContent = "Erro!";
-        this.shadow.appendChild(title);
+        this.appendChild(title);
 
         if (message) {
             this.setErrorMessage(message);
@@ -227,13 +229,13 @@ export default class InputModal extends HTMLDialogElement {
         if (options.title) {
             const title = document.createElement("h2");
             title.textContent = options.title;
-            this.shadow.appendChild(title);
+            this.appendChild(title);
         }
 
         if (options.message) {
             const message = document.createElement("p");
             message.textContent = options.message;
-            this.shadow.appendChild(message);
+            this.appendChild(message);
         }
 
         switch (type) {
@@ -255,9 +257,9 @@ export default class InputModal extends HTMLDialogElement {
                     wrraper.appendChild(input);
                     // will remove btns (confirmBtn parent element) from "this" (keyword)
                     // to the form.
-                    createFormAndAppend(this.shadow, [wrraper, this.confirmBtn.parentElement]);
+                    createFormAndAppend(this, [wrraper, this.confirmBtn.parentElement]);
                 } else {
-                    createFormAndAppend(this.shadow, [input]);
+                    createFormAndAppend(this, [input]);
                 }
 
                 return new Promise((resolve, reject) => {
@@ -287,7 +289,7 @@ export default class InputModal extends HTMLDialogElement {
                     console.warn(`Were passed more labels (${options.inputAmount}) than inputs (${options.labels.length}) to the input modal. The remaining labels will not be shown. ${options.labels.length - options.inputAmount} labels excluded.`);
                 }
 
-                const form = createFormAndAppend(this.shadow, []);
+                const form = createFormAndAppend(this, []);
 
                 for (let i = 0; i < options.inputAmount; i++) {
                     const input = document.createElement("input");
@@ -445,7 +447,7 @@ export default class InputModal extends HTMLDialogElement {
                     selectList.appendChild(option);
                 }
 
-                this.shadow.insertBefore(selectList, this.confirmBtn.parentElement);
+                this.insertBefore(selectList, this.confirmBtn.parentElement);
 
                 return new Promise((resolve, reject) => {
                     this.confirmBtn.addEventListener("click", function (ev) {
