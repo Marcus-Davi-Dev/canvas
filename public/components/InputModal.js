@@ -158,13 +158,13 @@ export default class InputModal extends HTMLDialogElement {
     }
 
     /**
-     * Remove everything from the Modal, leaving only the buttons and
-     * the error message.
+     * Remove everything from the Modal, leaving only the buttons, the
+     * error message and the style.
      */
     clear() {
         this.classList.forEach((className) => { this.classList.remove(className); });
         for (let i = 0; i < this.children.length; i++) {
-            if (this.children[i].id === "input-modal-buttons" || this.children[i].id === "error-message") {
+            if (["input-modal-buttons", "error-mesage"].indexOf(this.children[i].id) !== -1 || this.children[i].tagName === "STYLE") {
                 continue;
             }
 
