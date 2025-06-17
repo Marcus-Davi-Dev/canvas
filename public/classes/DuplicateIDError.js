@@ -1,4 +1,4 @@
-class DuplicateIDError extends Error {
+export default class DuplicateIDError extends Error {
     constructor(message, options = {}){
         super(message, options);
     }
