@@ -25,6 +25,7 @@ const drawings = document.querySelector("div#drawings");
 const header = document.querySelector("header");
 const searchBtn = header.querySelector("#searchBtn");
 const searchInput = header.querySelector("input#searchQuery");
+const deleteAllDrawingsBtn = document.querySelector("#delete-all-drawings");
 const more = header.querySelector("#more");
 const configBtn = document.querySelector("#configBtn");
 const closeConfigMenuBtn = document.querySelector("#close-config-menu");
@@ -57,7 +58,7 @@ sharedWorker.port.onmessage = async (ev) => {
         if (msg.result === "success") {
             inputModal.close();
             renderDrawing({ name: msg.drawing.name, img: msg.drawing.img, favorited: msg.drawing.favorited });
-            if (!inputModal.shadowRoot.querySelector("#error-message").classList.contains("hidden")) {
+            if (!inputModal.querySelector("#error-message").classList.contains("hidden")) {
                 inputModal.querySelector("#error-message").classList.add("hidden");
             }
             // atualiza o contador de desenhos da seção em que o desenho foi criado.
@@ -68,7 +69,7 @@ sharedWorker.port.onmessage = async (ev) => {
                 incrementDrawingCounter(asideSelectedSection, 1);
             }
         } else {
-            inputModal.setErrorMessage(errorMsg);
+            inputModal.setErrorMessage(msg.errorMsg);
         }
     }
     else if (msg.type === "delete drawing") {
@@ -156,9 +157,9 @@ sharedWorker.port.onmessage = async (ev) => {
         // the gray squares will have 10px width and height
         // ctx.fillStyle = "gray";
         // for (let x = 0; x <= canvas.width; x += 10) {
-            // for (let y = 0; y <= canvas.height; y += 10) {
-                // ctx.fillRect(x, y, 10, 10);
-            // }
+        // for (let y = 0; y <= canvas.height; y += 10) {
+        // ctx.fillRect(x, y, 10, 10);
+        // }
         // }
 
         ctx.drawImage(img, 0, 0);
@@ -210,21 +211,21 @@ sharedWorker.port.onmessage = async (ev) => {
                 }
             ]
         });
-        
+
         if (selectedOption) {
             const a = document.createElement("a");
             document.body.appendChild(a);
             a.download = msg.name;
-            
+
             switch (selectedOption) {
                 case "PNG":
                     a.href = imgPNG;
                     break;
-                    case "JPEG":
-                        a.href = imgJPG;
-                        break;
+                case "JPEG":
+                    a.href = imgJPG;
+                    break;
             }
-            
+
             a.click();
             a.remove();
 
@@ -250,7 +251,24 @@ sharedWorker.port.onmessage = async (ev) => {
             asideSections[1].children[1].textContent = msg.SectionFavoritadosDrawingAmount;
             asideSections[2].children[1].textContent = msg.SectionArquivadosDrawingAmount;
         }
-    } else if (msg.type === "DBerror") {
+    } else if(msg.type === "clear database"){
+        const div = document.createElement("div");
+        div.classList.add("modal");
+
+        const message = document.createElement("p");
+        div.appendChild(message);
+
+        if(msg.result === "success"){
+            message.textContent = "Desenhos apagados com sucesso.";
+        }else{
+            message.textContent = "Ocorreu um tentando apagar os desenhos.";
+        }
+
+        document.body.appendChild(div);
+        setTimeout(function(){
+            div.remove();
+        }, 5000);
+    }else if (msg.type === "DBerror") {
         alert("Ocorreu um erro no banco de dados, tente recarregar a página");
     }
 };
@@ -391,6 +409,10 @@ searchBtn.addEventListener('click', function (ev) {
     ev.preventDefault();
     sharedWorker.port.postMessage({ type: "search drawings", section: asideSelectedSection, search: searchInput.value });
 });
+
+deleteAllDrawingsBtn.addEventListener("click", dangerousAction("excluir todos os desenhos", function () {
+    sharedWorker.port.postMessage({ type: "clear database" });
+}));
 
 window.onresize = updateDrawingsMenuPosition;
 
@@ -545,4 +567,28 @@ function deleteDrawing(name, section) {
     removeDrawing(name);
     // deve ser feito no onmessage do Shared Worker.
     // decrementDrawingCounter(section, 1);
+}
+
+/**
+ * Shows a modal asking if you really want to do that.
+ * As it has to wait for the user input, the function will become
+ * asynchronous.
+ * @param {String} action what it does. No explanation or something except what it does.
+ * Example: "exclude all the drawings using a loop" not.
+ *          "exclude all drawings" yes.
+ * @param {Function} actionFunc the function that will do the action.
+ */
+function dangerousAction(action, actionFunc) {
+    return async function (...args) {
+        const confirmed = await inputModal.showInputModal("confirm", {
+            title: "Certeza?",
+            message: `Tem certeza de que quer ${action}? Esta é uma ação irreversível.`
+        });
+
+        inputModal.close();
+
+        if (confirmed) {
+            return actionFunc(...args);
+        }
+    }
 }
