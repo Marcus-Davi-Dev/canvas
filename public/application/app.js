@@ -43,7 +43,7 @@ const asideExtendedWidth = "133px";
 // tamanho com o menu de configuração aberto
 const asideExtendedPlusWidth = "200px";
 
-const sharedWorker = new SharedWorkerPolyfill("sharedWorker.js");
+const sharedWorker = new SharedWorkerPolyfill("../application/sharedWorker.js");
 sharedWorker.onerror = (err) => {
     console.log("SharedWorker error:", err);
 };

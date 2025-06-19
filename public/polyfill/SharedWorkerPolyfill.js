@@ -2,9 +2,9 @@ export default class SharedWorkerPolyfill {
     static sharedWorkerAvailable = "SharedWorker" in globalThis;
     constructor(scriptURL, options = {}){
         if(SharedWorkerPolyfill.sharedWorkerAvailable){
-            this.worker = new SharedWorker(scriptURL, options);
+            this.worker = new SharedWorker(new URL(scriptURL, import.meta.url), options);
         }else{
-            this.worker = new Worker(scriptURL, options);
+            this.worker = new Worker(new URL(scriptURL, import.meta.url), options);
         }
     }
 
