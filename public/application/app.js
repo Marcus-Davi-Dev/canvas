@@ -164,7 +164,12 @@ sharedWorker.port.onmessage = async (ev) => {
         ctx.drawImage(img, 0, 0);
 
         let imgPNG;
-        canvas.toBlob((blob) => { imgPNG = URL.createObjectURL(blob) });
+        await new Promise((resolve) => {
+            canvas.toBlob((blob) => {
+                imgPNG = URL.createObjectURL(blob);
+                resolve();
+            });
+        });
 
         // clear the canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -180,7 +185,12 @@ sharedWorker.port.onmessage = async (ev) => {
         ctx.fill();
 
         let imgJPG;
-        canvas.toBlob((blob) => { imgJPG = URL.createObjectURL(blob) });
+        await new Promise((resolve) => {
+            canvas.toBlob((blob) => {
+                imgJPG = URL.createObjectURL(blob);
+                resolve();
+            });
+        });
 
         const selectedOption = await inputModal.showInputModal("select", {
             selectOptions: [
