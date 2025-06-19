@@ -154,12 +154,12 @@ sharedWorker.port.onmessage = async (ev) => {
 
         // png quadriculated background
         // the gray squares will have 10px width and height
-        ctx.fillStyle = "gray";
-        for (let x = 0; x <= canvas.width; x += 10) {
-            for (let y = 0; y <= canvas.height; y += 10) {
-                ctx.fillRect(x, y, 10, 10);
-            }
-        }
+        // ctx.fillStyle = "gray";
+        // for (let x = 0; x <= canvas.width; x += 10) {
+            // for (let y = 0; y <= canvas.height; y += 10) {
+                // ctx.fillRect(x, y, 10, 10);
+            // }
+        // }
 
         ctx.drawImage(img, 0, 0);
 
@@ -183,6 +183,8 @@ sharedWorker.port.onmessage = async (ev) => {
         ctx.lineTo(canvas.width, 0);
         ctx.lineTo(0, 0);
         ctx.fill();
+
+        ctx.drawImage(img, 0, 0);
 
         let imgJPG;
         await new Promise((resolve) => {
@@ -208,26 +210,26 @@ sharedWorker.port.onmessage = async (ev) => {
                 }
             ]
         });
-
-        URL.revokeObjectURL(imgPNG);
-        URL.revokeObjectURL(imgJPG);
-
+        
         if (selectedOption) {
             const a = document.createElement("a");
             document.body.appendChild(a);
             a.download = msg.name;
-
-            switch (selectedOption.id) {
+            
+            switch (selectedOption) {
                 case "PNG":
                     a.href = imgPNG;
                     break;
-                case "JPEG":
-                    a.href = imgJPG;
-                    break;
+                    case "JPEG":
+                        a.href = imgJPG;
+                        break;
             }
-
+            
             a.click();
             a.remove();
+
+            URL.revokeObjectURL(imgPNG);
+            URL.revokeObjectURL(imgJPG);
         }
     } else if (msg.type === "search drawings") {
         drawings.innerHTML = "Nenhum desenho.<br> Pressione o botão \'+\' para criar um novo desenho.";
