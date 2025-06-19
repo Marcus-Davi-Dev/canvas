@@ -111,12 +111,15 @@ export default class InputModal extends HTMLDialogElement {
             border: 1px gray solid;
             border-radius: 4px;
             transition: box-shadow .3s;
+            box-shadow: black 0 0 9px 1px;
         }
 
         dialog.select-modal ul[role="listbox"] li img {
             max-width: 20%;
             min-width: 80px;
             border-radius: 7px;
+            pointer-events: none;
+            user-select: none;
         }
 
         dialog.select-modal ul[role="listbox"] li:last-of-type {
