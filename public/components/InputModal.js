@@ -219,6 +219,10 @@ export default class InputModal extends HTMLDialogElement {
         }
 
         this.clear();
+        // after closing a InputModal of type input and opening a InputModal of other type, a
+        // error can happen, as in the code of the type input it appends the confirmBtn parent
+        // to a form, and the form is later removed from the DOM with the buttons.
+        this.appendChild(this.confirmBtn.parentElement);
         this.querySelector("#error-message").classList.add("hidden");
         this.classList.add("modal");
         this.showModal();
