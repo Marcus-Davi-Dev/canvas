@@ -442,7 +442,7 @@ ctx.lineJoin = "round";
 
 const draw = new Draw(canvas);
 
-const sharedWorker = new SharedWorkerPolyfill("sharedWorker.js");
+const sharedWorker = new SharedWorkerPolyfill("../application/sharedWorker.js");
 
 sharedWorker.port.onmessage = function (ev) {
     const msg = ev.data;
