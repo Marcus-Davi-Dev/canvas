@@ -25,7 +25,7 @@ function doRecursive(func, tree) {
  */
 function createFormAndAppend(parentElement, formChildren) {
     const form = document.createElement("form");
-    form.append(formChildren);
+    formChildren.forEach((child) => {form.appendChild(child)});
 
     doRecursive(function (element) {
         if (element.nodeName.toLowerCase() !== "input") {
@@ -50,20 +50,12 @@ export default class InputModal extends HTMLDialogElement {
     }
 
     connectedCallback() {
+        this.classList.add("modal");
         const style = document.createElement("style");
         // in our especific case, there will be only 1 InputModal,
         // so this style adding isnt a problem, but if had many i
         // think that would be a problem.
         style.textContent = `
-        dialog {
-            padding: 14px;
-            border-radius: 7px;
-            background-color: var(--primary-background-color);
-            color: var(--primary-font-color);
-            border: none;
-            box-shadow: 0px 0px 20px 3px black;
-        }
-
         dialog::backdrop {
             background-color: rgba(0, 0, 0, 0.4);
         }
@@ -167,11 +159,12 @@ export default class InputModal extends HTMLDialogElement {
     clear() {
         this.classList.forEach((className) => { this.classList.remove(className); });
         for (let i = 0; i < this.children.length; i++) {
-            if (["input-modal-buttons", "error-mesage"].indexOf(this.children[i].id) !== -1 || this.children[i].tagName === "STYLE") {
+            if (["input-modal-buttons", "error-message"].indexOf(this.children[i].id) !== -1 || this.children[i].tagName === "STYLE") {
                 continue;
             }
 
             this.children[i].remove();
+            i--;
         }
     }
 
@@ -180,6 +173,7 @@ export default class InputModal extends HTMLDialogElement {
      * @param {String} message The error message.
      */
     setErrorMessage(message) {
+        this.querySelector("#error-message").classList.toggle("hidden", false)
         this.querySelector("#error-message").textContent = message;
     }
 
@@ -225,6 +219,12 @@ export default class InputModal extends HTMLDialogElement {
         }
 
         this.clear();
+        // after closing a InputModal of type input and opening a InputModal of other type, a
+        // error can happen, as in the code of the type input it appends the confirmBtn parent
+        // to a form, and the form is later removed from the DOM with the buttons.
+        this.appendChild(this.confirmBtn.parentElement);
+        this.querySelector("#error-message").classList.add("hidden");
+        this.classList.add("modal");
         this.showModal();
 
         const instance = this;
@@ -269,12 +269,14 @@ export default class InputModal extends HTMLDialogElement {
                     this.confirmBtn.addEventListener("click", function (ev) {
                         ev.preventDefault();
 
+                        instance.querySelector("#error-message").classList.add("hidden");
                         resolve(input.value);
                     });
-
+                    
                     this.cancelBtn.addEventListener("click", function (ev) {
                         ev.preventDefault();
-
+                        
+                        instance.querySelector("#error-message").classList.add("hidden");
                         instance.close();
                         reject(new Error("The operation was canceled."));
                     });
@@ -331,16 +333,19 @@ export default class InputModal extends HTMLDialogElement {
                             values.push(this.querySelectorAll("input")[i].value);
                         }
                         resolve(values);
+                        instance.querySelector("#error-message").classList.add("hidden");
                     });
 
                     this.cancelBtn.addEventListener("click", function (ev) {
                         ev.preventDefault();
 
+                        instance.querySelector("#error-message").classList.add("hidden");
                         instance.close();
                         reject(new Error("The operation was canceled."));
                     });
                 });
             case "confirm":
+                this.appendChild(this.confirmBtn.parentElement);
                 return new Promise((resolve) => {
                     this.confirmBtn.addEventListener("click", function (ev) {
                         ev.preventDefault();

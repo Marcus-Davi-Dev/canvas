@@ -102,6 +102,11 @@ body>.wrraper aside>div[data-config-btn-parent] {
     place-items: center;
 }
 
+#delete-all-drawings {
+    all: revert;
+    border-radius: 7px;
+}
+
 #config-menu:not(.hidden) {
     display: flex;
     flex-direction: column;
@@ -124,6 +129,22 @@ body>.wrraper aside>div[data-config-btn-parent] {
 
 .configuration-block .description {
     font-size: 12px;
+}
+
+.dangerous {
+    color: red !important;
+    background-color: #ffacac !important;
+}
+
+.modal {
+    position: absolute;
+    z-index: 100;
+    background-color: var(--primary-background-color);
+    color: var(--primary-font-color);
+    padding: 14px;
+    border-radius: 7px;
+    border: none;
+    box-shadow: black 0 0 20px 3px;
 }
 
 main {

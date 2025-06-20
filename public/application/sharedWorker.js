@@ -244,6 +244,16 @@ function addOnMessage(port){
                 port.postMessage({ type: "search drawings", result: "success", drawings: filteredDrawings });
                 console.log(`SharedWorker: drawings on ${msg.section} filtered. Result: ${filteredDrawings}.`);
             }
+        }else if(msg.type === "clear database"){
+            try{
+                for(let i = 0; i < db.objectStoreNames.length; i++){
+                    db.transaction([db.objectStoreNames[i]], "readwrite").objectStore(db.objectStoreNames[i]).clear();
+                }
+            }catch (e){
+                port.postMessage({type: "clear database", result: "error", error: e, errorMsg: e.message});
+                return;
+            }
+            port.postMessage({type: "clear database", result: "success"});
         }
     }
 }
