@@ -5,6 +5,7 @@
 :root.dark {
     --body-background-color: #3f3f3f;
     --primary-background-color: #222;
+    --basic-button-background-color: #6f6f6f;
     --darker-border-color: #0f0f0f;
     --border-color: gray;
     --primary-font-color: white;
@@ -15,6 +16,7 @@
 :root.light {
     --body-background-color: #f3f3f3;
     --primary-background-color: #dfdfdf;
+    --basic-button-background-color: #b8b8b8;
     --darker-border-color: black;
     --border-color: #222;
     --primary-font-color: black;
@@ -83,8 +85,8 @@ body>.wrraper aside ul>li>span.section-drawings-counter:not(.hidden) {
 
 body>.wrraper aside button,
 body>.wrraper main button:has(svg),
-div[popover] button,
-header button {
+div[popover] button:not(.normal),
+header button:not(.normal) {
     background: none;
     border: none;
     color: inherit;
@@ -100,6 +102,36 @@ body>.wrraper aside>div[data-config-btn-parent] {
     font-size: 12px;
     margin-bottom: 4px;
     place-items: center;
+}
+
+#drawing-related-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+#change-drawings-ordering-modal:popover-open {
+    display: block;
+    box-shadow: black 5px 5px 10px 2px;
+}
+
+#change-drawings-ordering-modal:popover-open button {
+    box-shadow: black 2px 2px 2px 0px;
+    background-color: var(--basic-button-background-color);
+    border: 1px black solid;
+    border-radius: 3px;
+    color: var(--primary-font-color);
+}
+
+#change-drawings-ordering-modal:popover-open button:active {
+    box-shadow: inset black -1px -1px 4px 0px;
+    position: relative;
+    top: 1px;
+    left: 1px;
+}
+
+button {
+    cursor: pointer;
 }
 
 #delete-all-drawings {
@@ -167,86 +199,98 @@ header {
     align-items: center;
     gap: 7px;
 }
+/* 
+header * {
+    font-size: 14px;
+    } */
+    
+    header form {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    
+    header form input {
+        width: 100%;
+    }
+    
+    header .entity {
+        line-height: 0.8;
+        font-size: 52px;
+    }
+    
+    header #change-drawings-ordering-btn {
+        border: 1px black solid;
+        border-radius: 999px;
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 0.1rem 0.45rem;
+        color: var(--primary-font-color);
+    }
+    
+    #new-drawing {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        background-color: var(--primary-background-color);
+        height: 48px;
+        width: 48px;
+        padding: 8px;
+        border-radius: 100%;
+        color: var(--primary-font-color);
+        text-align: center;
+        font-size: 28px;
+    }
+    
+    #drawings {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
+        padding-top: 7px;
+    }
+    
+    #drawings>.drawing {
+        width: 40%;
+        height: max-content;
+        border: 3px var(--darker-border-color) solid;
+        border-radius: 7px;
+        display: flex;
+        flex-direction: column;
+    }
 
-header form {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-header form input {
-    width: 100%;
-}
-
-header .entity {
-    line-height: 0.8;
-    font-size: 52px;
-}
-
-#new-drawing {
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
-    background-color: var(--primary-background-color);
-    height: 48px;
-    width: 48px;
-    padding: 8px;
-    border-radius: 100%;
-    color: var(--primary-font-color);
-    text-align: center;
-    font-size: 28px;
-}
-
-#drawings {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    width: 100%;
-    padding-top: 7px;
-}
-
-#drawings>.drawing {
-    width: 40%;
-    height: max-content;
-    border: 3px var(--darker-border-color) solid;
-    border-radius: 7px;
-    display: flex;
-    flex-direction: column;
-}
-
-#drawings>.drawing>a>img {
-    border-radius: 6px 6px 0 0;
-    max-height: 73px;
-}
-
-.png {
-    background-image: url("../images/PNG_background.png");
-    background-repeat: repeat;
-    background-size: 10px;
-}
-
-.jpeg {
-    background-color: white;
-}
-
-.info {
-    display: flex;
-    justify-content: space-between;
-}
-
-.info .options {
-    display: flex;
-    width: max-content;
-}
-
-svg {
-    color: var(--svg-color);
-}
-
-.hidden {
-    display: none;
+    #drawings>.drawing>a>img {
+        border-radius: 6px 6px 0 0;
+        max-height: 73px;
+    }
+    
+    .png {
+        background-image: url("../images/PNG_background.png");
+        background-repeat: repeat;
+        background-size: 10px;
+    }
+    
+    .jpeg {
+        background-color: white;
+    }
+    
+    .info {
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .info .options {
+        display: flex;
+        width: max-content;
+    }
+    
+    svg {
+        color: var(--svg-color);
+    }
+    
+    .hidden {
+        display: none;
 }
 
 .flex-column {
@@ -278,10 +322,17 @@ div[popover]:popover-open {
     }
 }
 
+@media screen and (max-width: 475px) {
+    #change-drawings-ordering-btn {
+        display: none;
+    }
+}
+
 @media screen and (prefers-color-scheme: dark) {
     :root {
         --body-background-color: #3f3f3f;
         --primary-background-color: #222;
+        --basic-button-background-color: #6f6f6f;
         --darker-border-color: #0f0f0f;
         --border-color: gray;
         --primary-font-color: white;
@@ -294,6 +345,7 @@ div[popover]:popover-open {
     :root {
         --body-background-color: #f3f3f3;
         --primary-background-color: #dfdfdf;
+        --basic-button-background-color: #b8b8b8;
         --darker-border-color: black;
         --border-color: #222;
         --primary-font-color: black;

@@ -110,7 +110,18 @@ function addOnMessage(port){
         else if (msg.type === "render section") {
             console.log(`SharedWorker: section \'${msg.section}\' rendered.`);
             let drawings = [];
-            db.transaction([msg.section]).objectStore(msg.section).openCursor().onsuccess = (ev) => {
+            
+            let index = "name";
+            let direction = "next";
+            if(msg.order){
+                // map the position of a value in a array to get the value at the same position
+                // in other array.
+                index = ["name", "criacao", "modificado"][["nome", "criação", "modificação"].indexOf(msg.order.mode)];
+                direction = ["next", "prev"][["normal", "inversa"].indexOf(msg.order.way)];
+            }
+
+            const objectStore = db.transaction([msg.section]).objectStore(msg.section);
+            objectStore.index(index).openCursor(undefined, direction).onsuccess = (ev) => {
                 const cursor = ev.target.result;
                 if (cursor) {
                     drawings.push(cursor.value);
