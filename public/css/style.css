@@ -115,14 +115,6 @@ body>.wrraper aside>div[data-config-btn-parent] {
     box-shadow: black 5px 5px 10px 2px;
 }
 
-#change-drawings-ordering-modal:popover-open button {
-    box-shadow: black 2px 2px 2px 0px;
-    background-color: var(--basic-button-background-color);
-    border: 1px black solid;
-    border-radius: 3px;
-    color: var(--primary-font-color);
-}
-
 #change-drawings-ordering-modal:popover-open button:active {
     box-shadow: inset black -1px -1px 4px 0px;
     position: relative;
@@ -132,6 +124,13 @@ body>.wrraper aside>div[data-config-btn-parent] {
 
 button {
     cursor: pointer;
+}
+
+.basic-button {
+    background-color: var(--basic-button-background-color);
+    border: 1px black solid;
+    border-radius: 3px;
+    color: var(--primary-font-color);
 }
 
 #delete-all-drawings {
