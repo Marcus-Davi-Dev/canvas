@@ -318,12 +318,6 @@ div[popover]:popover-open {
     }
 }
 
-@media screen and (max-width: 475px) {
-    #change-drawings-ordering-btn {
-        display: none;
-    }
-}
-
 @media screen and (prefers-color-scheme: dark) {
     :root {
         --body-background-color: #3f3f3f;
