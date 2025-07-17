@@ -350,10 +350,14 @@ function addOnMessage(port) {
 // port ─ para mandar a mensagem de que o banco de dados já foi carregado.
 async function loadDatabase(port) {
     let request = indexedDB.open(DB_NAME, 2);
+    request.onblocked = () => {
+        alert("Uma conexão com o banco de dados está impedindo que atualizemos ele para uma versão maior. Por favor tente fechar todas as abas abertas deste site.");
+    }
+
     request.onupgradeneeded = (ev) => {
         console.log("SharedWorker: database created.");
-        /**@type {IDBDatabase}*/
-        let db = ev.target.result;
+
+        db = ev.target.result;
         databaseCreated = true;
 
         function updateIndexes(objectStoreName) {
@@ -362,16 +366,20 @@ async function loadDatabase(port) {
             const expectedIndexNames = [];
             indexes.forEach((index) => { expectedIndexNames.push(index.name); });
             // if a index exist in the object store but is not expected to
-            if (new Set(objectStore.indexNames).difference(expectedIndexNames).size) {
-                Array.from(new Set(objectStore.indexNames).difference(expectedIndexNames)).forEach((indexName) => {
+            if (new Set(objectStore.indexNames).difference(new Set(expectedIndexNames)).size) {
+                Array.from(new Set(objectStore.indexNames).difference(new Set(expectedIndexNames))).forEach((indexName) => {
                     objectStore.deleteIndex(indexName);
                 });
             }
             for (let j = 0; j < indexes.length; j++) {
-                const index = objectStore.index(indexes[j].name);
                 if (!objectStore.indexNames.contains(indexes[j].name)) {
                     objectStore.createIndex(indexes[j].name, indexes[j].keyPath, { unique: indexes[j].unique, multiEntry: indexes[j].multiEntry });
-                } else if (
+                    continue;
+                }
+
+                const index = objectStore.index(indexes[j].name);
+
+                if (
                     index.unique !== indexes[j].unique ||
                     index.multiEntry !== indexes[j].multiEntry ||
                     index.keyPath !== indexes[j].keyPath
@@ -402,10 +410,14 @@ async function loadDatabase(port) {
 
                 from.forEach((prop, index) => {
                     if(cursor.value.hasOwnProperty(prop)){
-                        cursor.value[to[index]] = cursor.value[prop];
-                        delete cursor.value[prop];
+                        const value = cursor.value;
+                        value[to[index]] = value[prop];
+                        delete value[prop];
+                        cursor.update(value);
                     }
                 });
+
+                cursor.continue();
             }
         }
 
@@ -432,7 +444,7 @@ async function loadDatabase(port) {
                     db.createObjectStore(DB_OBJECT_STORES[i].name, { keyPath: DB_OBJECT_STORES[i].keyPath });
                 }
                 updateIndexes(DB_OBJECT_STORES[i].name);
-                updateSchema(["criacao", "modificado"], ["created", "modificated"]);
+                updateSchema(objectStore, ["criacao", "modificado"], ["created", "modificated"]);
             }
         }
 
