@@ -484,6 +484,16 @@ themeSelector.addEventListener('change', function () {
     changeTheme(this.value);
 });
 
+// change the position of the "change drawings ordering" button from the header to the aside
+// if the width of the screen is small.
+window.matchMedia("screen and (max-width: 475px)").onchange = function(query){
+    if(query.matches){
+        aside.querySelector("ul").insertAdjacentElement("afterend", changeOrderingBtn.parentElement);
+    }else{
+        header.querySelector("#drawing-related-options").insertAdjacentElement("beforebegin", changeOrderingBtn.parentElement);
+    }
+}
+
 function showConfigMenu() {
     configBtn.ariaExpanded = "true";
     closeConfigMenuBtn.ariaExpanded = "true";
