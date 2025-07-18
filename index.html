@@ -17,15 +17,36 @@
                     d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z" />
             </svg>
         </button>
-        <form role="search" action="#">
-            <input id="searchQuery" placeholder="Pesquisa...">
-            <button id="searchBtn">
-                <svg viewbox="0 0 512 512" height="41.59px" title="Pesquisar" aria-label="Pesquisar">
-                    <path fill="currentColor"
-                        d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z">
-                </svg>
-            </button>
-        </form>
+        <div id="drawing-related-options">
+            <div>
+                <button id="change-drawings-ordering-btn" class="normal" popovertarget="change-drawings-ordering-modal" popovertargetaction="toggle">Mudar ordenação</button>
+                <div id="change-drawings-ordering-modal" popover>
+                    <label for="ordering-mode">Ordenar por</label>
+                    <select id="ordering-mode">
+                        <option value="nome">nome</option>
+                        <option value="criação">data de criação</option>
+                        <option value="modificação">data de modificação</option>
+                    </select>.<br>
+    
+                    <label for="ordering-way">Ordenar de forma</label>
+                    <select id="ordering-way">
+                        <option value="normal">normal</option>
+                        <option value="inversa">inversa</option>
+                    </select>.
+                    <br>
+                    <button class="normal basic-button">Aplicar</button>
+                </div>
+            </div>
+            <form role="search" action="#">
+                <input id="searchQuery" placeholder="Pesquisa...">
+                <button id="searchBtn">
+                    <svg viewbox="0 0 512 512" height="41.59px" title="Pesquisar" aria-label="Pesquisar">
+                        <path fill="currentColor"
+                            d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z">
+                    </svg>
+                </button>
+            </form>
+        </div>
     </header>
     <div class="wrraper">
         <aside id="aside" style="min-width: 0; width: 0; border-right: 0px black solid;" data-width="109.781px">

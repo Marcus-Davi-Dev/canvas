@@ -3,6 +3,84 @@ let db;
 // nossa só seja executada se o banco de dados não tenha sido criado dessa vez.
 let databaseCreated = false;
 
+const DB_NAME = "canvas";
+const DB_VERSION = 2;
+// each time a change is made to one of these variables the database version must increase.
+const DB_OBJECT_STORES = [{
+    name: "tudo",
+    keyPath: "name"
+},
+{
+    name: "favoritados",
+    keyPath: "name"
+},
+{
+    name: "arquivados",
+    keyPath: "name"
+}];
+const DB_OBJECT_STORES_INDEXES = {
+    "tudo": [
+        {
+            name: "name",
+            keyPath: "name",
+            unique: true,
+            multiEntry: false
+        },
+        {
+            name: "created",
+            keyPath: "created",
+            unique: false,
+            multiEntry: false,
+        },
+        {
+            name: "modificated",
+            keyPath: "modificated",
+            unique: false,
+            multiEntry: false
+        }
+    ],
+    "favoritados": [
+        {
+            name: "name",
+            keyPath: "name",
+            unique: true,
+            multiEntry: false
+        },
+        {
+            name: "created",
+            keyPath: "created",
+            unique: false,
+            multiEntry: false,
+        },
+        {
+            name: "modificated",
+            keyPath: "modificated",
+            unique: false,
+            multiEntry: false
+        }
+    ],
+    "arquivados": [
+        {
+            name: "name",
+            keyPath: "name",
+            unique: true,
+            multiEntry: false
+        },
+        {
+            name: "created",
+            keyPath: "created",
+            unique: false,
+            multiEntry: false,
+        },
+        {
+            name: "modificated",
+            keyPath: "modificated",
+            unique: false,
+            multiEntry: false
+        }
+    ]
+};
+
 class Drawing {
     constructor() { }
 
@@ -13,8 +91,8 @@ class Drawing {
      * @param {Boolean} isFavorited Indica se o desenho está favoritado.
      * @returns O desenho recém-criado.
      */
-    static create(name, img, isFavoritated, criacao = Date.now()) {
-        return { name: name, criacao: criacao, img: img, favorited: isFavoritated, modificado: Date.now() };
+    static create(name, img, isFavoritated, created = Date.now()) {
+        return { name: name, created: created, img: img, favorited: isFavoritated, modificated: Date.now() };
     }
 
     /**
@@ -35,20 +113,20 @@ class Drawing {
                     cursor.continue();
                 } else {
                     resolve(null);
-                }    
-            }    
-        })    
-    }    
-}    
+                }
+            }
+        })
+    }
+}
 
-function main(port){
-    (async function(){
+function main(port) {
+    (async function () {
         await loadDatabase(port);
         addOnMessage(port);
     })();
 }
 
-function addOnMessage(port){
+function addOnMessage(port) {
     port.onmessage = async (ev) => {
         console.log("SharedWorker: message received by shared worker.", ev);
         const msg = ev.data;
@@ -110,7 +188,18 @@ function addOnMessage(port){
         else if (msg.type === "render section") {
             console.log(`SharedWorker: section \'${msg.section}\' rendered.`);
             let drawings = [];
-            db.transaction([msg.section]).objectStore(msg.section).openCursor().onsuccess = (ev) => {
+
+            let index = "name";
+            let direction = "next";
+            if (msg.order) {
+                // map the position of a value in a array to get the value at the same position
+                // in other array.
+                index = ["name", "created", "modificated"][["nome", "criação", "modificação"].indexOf(msg.order.mode)];
+                direction = ["next", "prev"][["normal", "inversa"].indexOf(msg.order.way)];
+            }
+
+            const objectStore = db.transaction([msg.section]).objectStore(msg.section);
+            objectStore.index(index).openCursor(undefined, direction).onsuccess = (ev) => {
                 const cursor = ev.target.result;
                 if (cursor) {
                     drawings.push(cursor.value);
@@ -122,7 +211,7 @@ function addOnMessage(port){
         }
         else if (msg.type === "favoritate drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
-    
+
             if (drawingInfos) {
                 const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
                 objectStores.onerror = (err) => {
@@ -131,20 +220,20 @@ function addOnMessage(port){
                 }
                 if (msg.section === "arquivados" && msg.confirmed) {
                     objectStores.objectStore("arquivados").delete(msg.name);
-                    objectStores.objectStore("favoritados").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
-                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
+                    objectStores.objectStore("favoritados").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.created));
+                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.created));
                     secaoTudoAddRequest.onsuccess = () => {
                         port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favorited: true });
                     }
                 } else if (msg.section === "favoritados" || drawingInfos.favorited) {
                     objectStores.objectStore("favoritados").delete(msg.name);
-                    const updateRequest = objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
+                    const updateRequest = objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.created));
                     updateRequest.onsuccess = () => {
                         port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favorited: false });
                     }
                 } else {
-                    objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
-                    const addRequest = objectStores.objectStore("favoritados").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.criacao));
+                    objectStores.objectStore("tudo").put(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.created));
+                    const addRequest = objectStores.objectStore("favoritados").add(Drawing.create(drawingInfos.name, drawingInfos.img, true, drawingInfos.created));
                     addRequest.onsuccess = () => {
                         port.postMessage({ type: "favoritate drawing", result: "success", name: msg.name, section: msg.section, favorited: true });
                     }
@@ -155,7 +244,7 @@ function addOnMessage(port){
         }
         else if (msg.type === "archive drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
-            
+
             if (drawingInfos) {
                 const objectStores = db.transaction(["tudo", "favoritados", "arquivados"], "readwrite");
                 objectStores.onerror = (err) => {
@@ -165,19 +254,19 @@ function addOnMessage(port){
                 if (drawingInfos.favorited || msg.section === "favoritados") {
                     objectStores.objectStore("tudo").delete(msg.name);
                     objectStores.objectStore("favoritados").delete(msg.name);
-                    const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
+                    const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.created));
                     secaoArquivadosAddRequest.onsuccess = () => {
                         port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: true, section: msg.section });
                     }
                 } else if (msg.section === "tudo") {
                     objectStores.objectStore("tudo").delete(msg.name);
-                    const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
+                    const secaoArquivadosAddRequest = objectStores.objectStore("arquivados").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.created));
                     secaoArquivadosAddRequest.onsuccess = () => {
                         port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: false, section: msg.section });
                     }
                 } else {
                     objectStores.objectStore("arquivados").delete(msg.name);
-                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.criacao));
+                    const secaoTudoAddRequest = objectStores.objectStore("tudo").add(Drawing.create(drawingInfos.name, drawingInfos.img, false, drawingInfos.created));
                     secaoTudoAddRequest.onsuccess = () => {
                         port.postMessage({ type: "archive drawing", result: "success", name: msg.name, favorited: false, section: msg.section });
                     }
@@ -206,7 +295,7 @@ function addOnMessage(port){
             }
         } else if (msg.type === "update drawing") {
             const drawingInfos = await Drawing.searchDrawing(msg.name, msg.section);
-            
+
             if (drawingInfos) {
                 const objectStores = db.transaction(["favoritados", "tudo", "arquivados"], "readwrite");
                 if (msg.section === "arquivados") {
@@ -244,49 +333,126 @@ function addOnMessage(port){
                 port.postMessage({ type: "search drawings", result: "success", drawings: filteredDrawings });
                 console.log(`SharedWorker: drawings on ${msg.section} filtered. Result: ${filteredDrawings}.`);
             }
-        }else if(msg.type === "clear database"){
-            try{
-                for(let i = 0; i < db.objectStoreNames.length; i++){
+        } else if (msg.type === "clear database") {
+            try {
+                for (let i = 0; i < db.objectStoreNames.length; i++) {
                     db.transaction([db.objectStoreNames[i]], "readwrite").objectStore(db.objectStoreNames[i]).clear();
                 }
-            }catch (e){
-                port.postMessage({type: "clear database", result: "error", error: e, errorMsg: e.message});
+            } catch (e) {
+                port.postMessage({ type: "clear database", result: "error", error: e, errorMsg: e.message });
                 return;
             }
-            port.postMessage({type: "clear database", result: "success"});
+            port.postMessage({ type: "clear database", result: "success" });
         }
     }
 }
 
 // port ─ para mandar a mensagem de que o banco de dados já foi carregado.
-async function loadDatabase(port){
-    let request = indexedDB.open("canvas", 1);
+async function loadDatabase(port) {
+    let request = indexedDB.open(DB_NAME, 2);
+    request.onblocked = () => {
+        alert("Uma conexão com o banco de dados está impedindo que atualizemos ele para uma versão maior. Por favor tente fechar todas as abas abertas deste site.");
+    }
+
     request.onupgradeneeded = (ev) => {
         console.log("SharedWorker: database created.");
+
         db = ev.target.result;
         databaseCreated = true;
-    
+
+        function updateIndexes(objectStoreName) {
+            const objectStore = ev.target.transaction.objectStore(objectStoreName);
+            const indexes = DB_OBJECT_STORES_INDEXES[objectStore.name];
+            const expectedIndexNames = [];
+            indexes.forEach((index) => { expectedIndexNames.push(index.name); });
+            // if a index exist in the object store but is not expected to
+            if (new Set(objectStore.indexNames).difference(new Set(expectedIndexNames)).size) {
+                Array.from(new Set(objectStore.indexNames).difference(new Set(expectedIndexNames))).forEach((indexName) => {
+                    objectStore.deleteIndex(indexName);
+                });
+            }
+            for (let j = 0; j < indexes.length; j++) {
+                if (!objectStore.indexNames.contains(indexes[j].name)) {
+                    objectStore.createIndex(indexes[j].name, indexes[j].keyPath, { unique: indexes[j].unique, multiEntry: indexes[j].multiEntry });
+                    continue;
+                }
+
+                const index = objectStore.index(indexes[j].name);
+
+                if (
+                    index.unique !== indexes[j].unique ||
+                    index.multiEntry !== indexes[j].multiEntry ||
+                    index.keyPath !== indexes[j].keyPath
+                ) {
+                    // delete the index and recreate with the right information
+                    objectStore.deleteIndex(indexes[j].name);
+                    objectStore.createIndex(indexes[j].name, indexes[j].keyPath, { unique: indexes[j].unique, multiEntry: indexes[j].multiEntry });
+                }
+            }
+        }
+
+        /**
+         * 
+         * @param {IDBObjectStore} objectStore 
+         * @param {string[]} from array of properties to be 'renamed' from assuming that the property
+         * in a n position of the array will be renamed to the string in the n position of the other array
+         * @param {string[]} to array of properties to be 'renamed' to assuming that the property
+         * in a n position of the other array will be renamed to the string in the n position of this array
+         */
+        function updateSchema(objectStore, from, to) {
+            if(from.length !== to.length){
+                throw new Error("\'from\' and \'to\' must have the same length.");
+            }
+
+            objectStore.openCursor().onsuccess = function (ev) {
+                const cursor = ev.target.result;
+                if (!cursor) return;
+
+                from.forEach((prop, index) => {
+                    if(cursor.value.hasOwnProperty(prop)){
+                        const value = cursor.value;
+                        value[to[index]] = value[prop];
+                        delete value[prop];
+                        cursor.update(value);
+                    }
+                });
+
+                cursor.continue();
+            }
+        }
+
+        // check if object store exist:
+        // - if false, create the object store and his indexes
+        // - if true, check if the properties are right
+        //   - if false, update the properties (delete and recreate the object store with the indexes)
+        //   - if true, check if the indexes are right
+        //     - if false, update (delete and recreate the index with updated information)
+        //     - if true, go to the next iteration of the loop.
+        for (let i = 0; i < DB_OBJECT_STORES.length; i++) {
+            if (!db.objectStoreNames.contains(DB_OBJECT_STORES[i].name)) {
+                const objectStore = db.createObjectStore(DB_OBJECT_STORES[i].name, { keyPath: DB_OBJECT_STORES[i].keyPath });
+
+                for (let j = 0; j < DB_OBJECT_STORES_INDEXES[objectStore.name].length; j++) {
+                    const index = DB_OBJECT_STORES_INDEXES[objectStore.name][j];
+                    objectStore.createIndex(index.name, index.keyPath, { unique: index.unique, multiEntry: index.multiEntry });
+                }
+            } else {
+                /**@type {IDBObjectStore}*/
+                const objectStore = ev.target.transaction.objectStore(DB_OBJECT_STORES[i].name);
+                if (objectStore.keyPath !== DB_OBJECT_STORES[i].keyPath) {
+                    db.deleteObjectStore(objectStore.name);
+                    db.createObjectStore(DB_OBJECT_STORES[i].name, { keyPath: DB_OBJECT_STORES[i].keyPath });
+                }
+                updateIndexes(DB_OBJECT_STORES[i].name);
+                updateSchema(objectStore, ["criacao", "modificado"], ["created", "modificated"]);
+            }
+        }
+
         db.onerror = (err) => {
             console.log("SharedWorker: an error ocurred in the database.", err)
             port.postMessage({ type: "DBerror" });
         }
-    
-        const tudoObjStr = db.createObjectStore("tudo", { keyPath: "name" });
-        // cria um index para pesquisa chamado 'name' que deve ser único.
-        tudoObjStr.createIndex("name", "name", { unique: true });
-        // cria outro index só que para a data de criação, que dessa vez não
-        // é única.
-        tudoObjStr.createIndex("criacao", "criacao", { unique: false });
-        tudoObjStr.createIndex("favorited", "favorited", { unique: false });
-    
-        const favoritadosObjStr = db.createObjectStore("favoritados", { keyPath: "name" });
-        favoritadosObjStr.createIndex("name", "name", { unique: true });
-        favoritadosObjStr.createIndex("criacao", "criacao", { unique: false });
-    
-        const arquivadosObjStr = db.createObjectStore("arquivados", { keyPath: "name" });
-        arquivadosObjStr.createIndex("name", "name", { unique: true });
-        arquivadosObjStr.createIndex("criacao", "criacao", { unique: false });
-    
+
         port.postMessage({ type: "ready" });
         port.postMessage({
             type: "init app",
@@ -296,7 +462,7 @@ async function loadDatabase(port){
             SectionArquivadosDrawingAmount: 0
         });
     }
-    
+
     // se o banco de dados já tiver sido criado antes
     await (async function () {
         // checa quantas databases existem, se existir ao menos uma vai verificar se é a que foi criada por nós.
@@ -305,13 +471,13 @@ async function loadDatabase(port){
             // percorre todas as databases procurando pela nossa
             for (let i = 0; i < databases.length; i++) {
                 console.log(`Database ${i + 1} de ${databases.length}`);
-                if (databases[i].name === "canvas") {
-                    console.log("Banco de dados \'canvas\' encontrado.");
-                    const request = indexedDB.open("canvas");
+                if (databases[i].name === DB_NAME) {
+                    console.log(`Banco de dados \'${DB_NAME}\' encontrado.`);
+                    const request = indexedDB.open(DB_NAME);
                     request.onsuccess = async function (ev) {
                         // atribui a database à variável
                         db = ev.target.result;
-    
+
                         db.onerror = () => {
                             port.postMessage({ type: "DBerror" });
                         }
@@ -368,7 +534,7 @@ self.onconnect = (event) => {
     main(event.ports[0]);
 }
 
-if("DedicatedWorkerGlobalScope" in this){
+if ("DedicatedWorkerGlobalScope" in this) {
     console.log("SharedWorker: probably using the polyfill. The SharedWorker is actually a Dedicated Worker.");
     main(this);
 }
