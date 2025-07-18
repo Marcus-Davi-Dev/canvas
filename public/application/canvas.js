@@ -19,7 +19,6 @@ canvas.onmouseup = () => {
 }
 */
 
-// the script will be running in the canvas.html scope, not the canvas.js
 import SharedWorkerPolyfill from "../polyfill/SharedWorkerPolyfill.js";
 import toArray from "../utils/toArray.js";
 
@@ -670,6 +669,17 @@ function handleMouseOrTouchMove(event){
 }
 
 function handleMouseDownOrTouchStart(event){
+    // if the user pressed the canvas, it was drawing,
+    // what means that the canvas was changed, then everytime
+    // the user try to reload to page or exit ask if it
+    // really want to. use the onXX syntax to only add
+    // 1 listener.
+    window.onbeforeunload = (ev) => {
+        // legacy suport
+        ev.returnValue = true;
+        ev.preventDefault();
+    }
+
     console.log(event);
     if (currentDrawingMode !== "line") {
         draw.moveTo(getEventPos(event).x, getEventPos(event).y);
