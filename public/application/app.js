@@ -17,7 +17,7 @@ import SharedWorkerPolyfill from "../polyfill/SharedWorkerPolyfill.js";
             argument, message, that will be the error message.
    - clear: clear the dialog, leaving only the buttons and the error message behind.
             Takes no arguments.
-*/
+*/ 
 const inputModal = document.querySelector("dialog[is='input-modal']");
 
 // --- ELEMENTS' ---
@@ -54,11 +54,11 @@ let asideClosed = true;
 let asideSelectedSection = document.querySelector("aside ul [aria-selected='true']").children[0].textContent.toLowerCase();
 const asideSections = document.querySelectorAll("aside ul li");
 // tamanho normal do aside
-const asideNormalWidth = "109.781px";
+const ASIDE_NORMAL_WIDTH = "109.781px";
 // com os contadores desenhos
-const asideExtendedWidth = "133px";
+const ASIDE_EXTENDED_WIDTH = "133px";
 // tamanho com o menu de configuração aberto
-const asideExtendedPlusWidth = "200px";
+const ASIDE_EXTENDED_PLUS_WIDTH = "200px";
 
 const sharedWorker = new SharedWorkerPolyfill("../application/sharedWorker.js");
 sharedWorker.onerror = (err) => {
@@ -533,10 +533,10 @@ function showConfigMenu() {
     drawings.parentNode.classList.add("not-focus");
 
     // apply a min width to increase the width of the aside
-    aside.style.minWidth = asideExtendedPlusWidth;
+    aside.style.minWidth = ASIDE_EXTENDED_PLUS_WIDTH;
 
     // update the css variable --aside-width because the aside is now bigger
-    document.documentElement.style.setProperty("--aside-width", asideExtendedPlusWidth);
+    document.documentElement.style.setProperty("--aside-width", ASIDE_EXTENDED_PLUS_WIDTH);
 }
 
 function hideConfigMenu() {
@@ -593,8 +593,8 @@ function toggleDrawingsCounter() {
         for (let i = 0; i < asideSections.length; i++) {
             asideSections[i].children[1].classList.remove("hidden");
         }
-        document.documentElement.style.setProperty("--aside-width", asideExtendedWidth);
-        aside.setAttribute("data-width", asideExtendedWidth);
+        document.documentElement.style.setProperty("--aside-width", ASIDE_EXTENDED_WIDTH);
+        aside.setAttribute("data-width", ASIDE_EXTENDED_WIDTH);
         for (let i = 0; i < asideSections.length; i++) {
             // só para saber o getBoundigClientRect().x e depois re-esconder
             asideSections[i].parentNode.classList.remove("hidden");
@@ -607,8 +607,8 @@ function toggleDrawingsCounter() {
             asideSections[i].children[1].classList.add("hidden");
             asideSections[i].children[1].style.marginLeft = "";
         }
-        document.documentElement.style.setProperty("--aside-width", asideNormalWidth);
-        aside.setAttribute("data-width", asideNormalWidth);
+        document.documentElement.style.setProperty("--aside-width", ASIDE_NORMAL_WIDTH);
+        aside.setAttribute("data-width", ASIDE_NORMAL_WIDTH);
     }
 }
 
