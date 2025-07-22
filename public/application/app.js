@@ -17,7 +17,7 @@ import SharedWorkerPolyfill from "../polyfill/SharedWorkerPolyfill.js";
             argument, message, that will be the error message.
    - clear: clear the dialog, leaving only the buttons and the error message behind.
             Takes no arguments.
-*/
+*/ 
 const inputModal = document.querySelector("dialog[is='input-modal']");
 
 // --- ELEMENTS' ---
@@ -54,11 +54,11 @@ let asideClosed = true;
 let asideSelectedSection = document.querySelector("aside ul [aria-selected='true']").children[0].textContent.toLowerCase();
 const asideSections = document.querySelectorAll("aside ul li");
 // tamanho normal do aside
-const asideNormalWidth = "109.781px";
+const ASIDE_NORMAL_WIDTH = "109.781px";
 // com os contadores desenhos
-const asideExtendedWidth = "133px";
+const ASIDE_EXTENDED_WIDTH = "133px";
 // tamanho com o menu de configuração aberto
-const asideExtendedPlusWidth = "200px";
+const ASIDE_EXTENDED_PLUS_WIDTH = "200px";
 
 const sharedWorker = new SharedWorkerPolyfill("../application/sharedWorker.js");
 sharedWorker.onerror = (err) => {
@@ -460,18 +460,40 @@ applyOrderingChanges.addEventListener("click", function () {
 window.onresize = updateDrawingsMenuPosition;
 
 more.addEventListener('click', function () {
-    if (asideClosed) {
+    if (asideClosed) { // open the aside
+        // say that the aside is open
         this.ariaExpanded = "true";
+
+        // update the width and the border
         aside.style.minWidth = "var(--aside-width)";
         aside.style.width = "var(--aside-width)";
         aside.style.borderRight = "2px black solid";
+
+        // self-descriptive
         asideClosed = false;
-    } else {
+
+        // if the config menu was left open and is being "re-opened" add the blur
+        // to the <main> (drawings.parentNode) because the config menu is open.
+        if(configBtn.ariaExpanded === "true"){
+            drawings.parentNode.classList.add("not-focus");
+        }
+    } else { // close the aside
+        // say that the aside is closed
         this.ariaExpanded = "false";
+
+        // remove the width and the border
         aside.style.minWidth = "0";
         aside.style.width = "0";
         aside.style.borderRight = "0 black solid";
+
+        // self-descriptive
         asideClosed = true;
+
+        // if the config menu was left open remove the blur from the <main> (drawings.parentNode)
+        // because the config menu isnt "open".
+        if(configBtn.ariaExpanded === "true"){
+            drawings.parentNode.classList.remove("not-focus");
+        }
     }
 
     setTimeout(updateDrawingsMenuPosition, 1000);
@@ -495,24 +517,47 @@ window.matchMedia("screen and (max-width: 475px)").onchange = function(query){
 }
 
 function showConfigMenu() {
+    // say that the config menu is open
     configBtn.ariaExpanded = "true";
     closeConfigMenuBtn.ariaExpanded = "true";
+
+    // hide these, as we dont need them
     asideSections[0].parentNode.classList.add("hidden");
     configBtn.parentNode.classList.add("hidden");
+
+    // actually show the config menu
     configMenu.classList.remove("hidden");
-    drawings.parentNode.style.filter = "blur(2px)";
-    aside.style.minWidth = asideExtendedPlusWidth;
-    document.documentElement.style.setProperty("--aside-width", asideExtendedPlusWidth);
+
+    // blur the <main> (drawings.parentNode) and prevent it from
+    // receiving pointer events
+    drawings.parentNode.classList.add("not-focus");
+
+    // apply a min width to increase the width of the aside
+    aside.style.minWidth = ASIDE_EXTENDED_PLUS_WIDTH;
+
+    // update the css variable --aside-width because the aside is now bigger
+    document.documentElement.style.setProperty("--aside-width", ASIDE_EXTENDED_PLUS_WIDTH);
 }
 
 function hideConfigMenu() {
+    // say that the config menu is closed
     configBtn.ariaExpanded = "false";
     closeConfigMenuBtn.ariaExpanded = "false";
+
+    // show the content that the config menu hid
     asideSections[0].parentNode.classList.remove("hidden");
     configBtn.parentNode.classList.remove("hidden");
+
+    // actually hide the config menu
     configMenu.classList.add("hidden");
-    drawings.parentNode.style.filter = "";
+
+    // de-blur the <main> (drawings.parentNode)
+    drawings.parentNode.classList.remove("not-focus");
+
+    // dont need the min-width anymore
     aside.style.minWidth = "";
+
+    // update the css variable --aside-width because the aside is now smaller
     document.documentElement.style.setProperty("--aside-width", aside.getAttribute("data-width"));
 }
 
@@ -548,8 +593,8 @@ function toggleDrawingsCounter() {
         for (let i = 0; i < asideSections.length; i++) {
             asideSections[i].children[1].classList.remove("hidden");
         }
-        document.documentElement.style.setProperty("--aside-width", asideExtendedWidth);
-        aside.setAttribute("data-width", asideExtendedWidth);
+        document.documentElement.style.setProperty("--aside-width", ASIDE_EXTENDED_WIDTH);
+        aside.setAttribute("data-width", ASIDE_EXTENDED_WIDTH);
         for (let i = 0; i < asideSections.length; i++) {
             // só para saber o getBoundigClientRect().x e depois re-esconder
             asideSections[i].parentNode.classList.remove("hidden");
@@ -562,8 +607,8 @@ function toggleDrawingsCounter() {
             asideSections[i].children[1].classList.add("hidden");
             asideSections[i].children[1].style.marginLeft = "";
         }
-        document.documentElement.style.setProperty("--aside-width", asideNormalWidth);
-        aside.setAttribute("data-width", asideNormalWidth);
+        document.documentElement.style.setProperty("--aside-width", ASIDE_NORMAL_WIDTH);
+        aside.setAttribute("data-width", ASIDE_NORMAL_WIDTH);
     }
 }
 
