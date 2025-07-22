@@ -115,6 +115,12 @@ body>.wrraper aside>div[data-config-btn-parent] {
     box-shadow: black 5px 5px 10px 2px;
 }
 
+/* not the focus of the moment */
+.not-focus {
+    pointer-events: none;
+    filter: blur(2px);
+}
+
 button {
     cursor: pointer;
 }
@@ -195,98 +201,94 @@ header {
     align-items: center;
     gap: 7px;
 }
-/* 
-header * {
-    font-size: 14px;
-    } */
-    
-    header form {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        gap: 7px;
-    }
-    
-    header form input {
-        width: 100%;
-    }
-    
-    header .entity {
-        line-height: 0.8;
-        font-size: 52px;
-    }
-    
-    header #change-drawings-ordering-btn {
-        border: 1px black solid;
-        border-radius: 999px;
-        background-color: rgba(0, 0, 0, 0.3);
-        padding: 0.1rem 0.45rem;
-        color: var(--primary-font-color);
-    }
-    
-    #new-drawing {
-        position: absolute;
-        right: 20px;
-        bottom: 20px;
-        background-color: var(--primary-background-color);
-        height: 48px;
-        width: 48px;
-        padding: 8px;
-        border-radius: 100%;
-        color: var(--primary-font-color);
-        text-align: center;
-        font-size: 28px;
-    }
-    
-    #drawings {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 20px;
-        width: 100%;
-        padding-top: 7px;
-    }
-    
-    #drawings>.drawing {
-        width: 40%;
-        height: max-content;
-        border: 3px var(--darker-border-color) solid;
-        border-radius: 7px;
-        display: flex;
-        flex-direction: column;
-    }
 
-    #drawings>.drawing>a>img {
-        border-radius: 6px 6px 0 0;
-        max-height: 73px;
-    }
-    
-    .png {
-        background-image: url("../images/PNG_background.png");
-        background-repeat: repeat;
-        background-size: 10px;
-    }
-    
-    .jpeg {
-        background-color: white;
-    }
-    
-    .info {
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .info .options {
-        display: flex;
-        width: max-content;
-    }
-    
-    svg {
-        color: var(--svg-color);
-    }
-    
-    .hidden {
-        display: none;
+header form {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+header form input {
+    width: 100%;
+}
+
+header .entity {
+    line-height: 0.8;
+    font-size: 52px;
+}
+
+header #change-drawings-ordering-btn {
+    border: 1px black solid;
+    border-radius: 999px;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 0.1rem 0.45rem;
+    color: var(--primary-font-color);
+}
+
+#new-drawing {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    background-color: var(--primary-background-color);
+    height: 48px;
+    width: 48px;
+    padding: 8px;
+    border-radius: 100%;
+    color: var(--primary-font-color);
+    text-align: center;
+    font-size: 28px;
+}
+
+#drawings {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    padding-top: 7px;
+}
+
+#drawings>.drawing {
+    width: 40%;
+    height: max-content;
+    border: 3px var(--darker-border-color) solid;
+    border-radius: 7px;
+    display: flex;
+    flex-direction: column;
+}
+
+#drawings>.drawing>a>img {
+    border-radius: 6px 6px 0 0;
+    max-height: 73px;
+}
+
+.png {
+    background-image: url("../images/PNG_background.png");
+    background-repeat: repeat;
+    background-size: 10px;
+}
+
+.jpeg {
+    background-color: white;
+}
+
+.info {
+    display: flex;
+    justify-content: space-between;
+}
+
+.info .options {
+    display: flex;
+    width: max-content;
+}
+
+svg {
+    color: var(--svg-color);
+}
+
+.hidden {
+    display: none;
 }
 
 .flex-column {
