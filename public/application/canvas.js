@@ -440,6 +440,12 @@ ctx.lineWidth = 2;
 ctx.lineCap = "round";
 ctx.lineJoin = "round";
 
+// if the lineWidth is odd, translate the canvas by 0.5 in the x-axis and the y-axis
+// can increase the pixel sharpness, removing part of the blur. Every time a change
+// to the lineWidth is made, update this variable to translate or de-translate the
+// canvas.
+let isPixelSharpnessTranslated = false;
+
 const draw = new Draw(canvas);
 
 const sharedWorker = new SharedWorkerPolyfill("../application/sharedWorker.js");
@@ -630,7 +636,7 @@ canvas.addEventListener("touchcancel", function(ev){
 
 canvas.addEventListener("click", function (ev) {
     if (currentDrawingMode === "line") {
-        draw.lineTo(ev.offsetX, ev.offsetY);
+        draw.lineTo(Math.round(ev.offsetX), Math.round(ev.offsetY));
         draw.ctx.stroke();
     }
 });
@@ -749,11 +755,11 @@ function handleMouseUpOrTouchEnd(event){
 */
 function getEventPos(event){
     if(event.type === "touchend"){
-        return {x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY};
+        return {x: Math.round(event.changedTouches[0].clientX), y: Math.round(event.changedTouches[0].clientY)};
     }else if(event.type.startsWith("touch")){
-        return {x: event.touches[0].clientX, y: event.touches[0].clientY};
+        return {x: Math.round(event.touches[0].clientX), y: Math.round(event.touches[0].clientY)};
     }else{
-        return {x: event.offsetX, y: event.offsetY};
+        return {x: Math.round(event.offsetX), y: Math.round(event.offsetY)};
     }
 }
 
@@ -879,6 +885,18 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
     }
 }
 lineWidthInput.addEventListener("input", function () {
+    /**
+     * if odd and already translated: do nothing.
+     * if odd and not translated: translate.
+     * if even and translated: de-translate.
+     * if even and not translated: do nothing.
+     */ 
+    if(parseInt(lineWidthInput.value) % 2 === 1 && !isPixelSharpnessTranslated){
+        ctx.translate(0.5, 0.5);
+    } else if(parseInt(lineWidthInput.value) % 2 === 0 && isPixelSharpnessTranslated){
+        ctx.translate(-0.5, -0.5);
+    }
+    
     ctx.lineWidth = lineWidthInput.value;
     draw.ctx.lineWidth = lineWidthInput.value;
 })
