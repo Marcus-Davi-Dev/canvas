@@ -668,7 +668,7 @@ function handleMouseOrTouchMove(event){
     if (isDrawing && currentDrawingMode === "free") {
         draw.strokeLineTo(getEventPos(event).x - 2, getEventPos(event).y - 2);
     } else {
-        if(isDrawing){
+        if(isDrawing && currentDrawingMode !== "line"){
             previewDraw.clear();
             previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
         }
