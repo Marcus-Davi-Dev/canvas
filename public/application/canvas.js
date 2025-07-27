@@ -47,6 +47,10 @@ class Draw {
         })
     }
 
+    clear(){
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
     /**
      * Move a caneta de desenho para as coordenadas especificadas.
      * @param {Number} x posição no eixo x em pixels
@@ -357,26 +361,26 @@ class Draw {
      * @param {Number} h altura do hexágono em pixels.
      * @param {Boolean} isFilled valor booleano que indica se o hexágono deve ser preenchido após desenhado.
     */
-    heptagon(x, y, w, h, isFilled = false) {
-        this.ctx.beginPath();
-
-        this.ctx.moveTo(x + w / 8 * 2, y);
-        this.ctx.lineTo(x + w / 8 * 6, y);
-        this.ctx.lineTo(x + w, y + h / 2);
-        this.ctx.lineTo(x + w / 8 * 6, y + h);
-        this.ctx.lineTo(x + w / 8 * 2, y + h);
-        this.ctx.lineTo(x, y + h / 2);
-        this.ctx.lineTo(x + w / 8 * 2, y);
-        if (isFilled) {
-            this.ctx.fill();
+   heptagon(x, y, w, h, isFilled = false) {
+       this.ctx.beginPath();
+       
+       this.ctx.moveTo(x + w / 8 * 2, y);
+       this.ctx.lineTo(x + w / 8 * 6, y);
+       this.ctx.lineTo(x + w, y + h / 2);
+       this.ctx.lineTo(x + w / 8 * 6, y + h);
+       this.ctx.lineTo(x + w / 8 * 2, y + h);
+       this.ctx.lineTo(x, y + h / 2);
+       this.ctx.lineTo(x + w / 8 * 2, y);
+       if (isFilled) {
+           this.ctx.fill();
         } else {
             this.ctx.stroke();
         }
-
+        
         this.ctx.closePath();
-
+        
     }
-
+    
     /**
      * Desenha um retângulo com as bordas arredondadas.
      * @param {Number} x posição do retângulo no eixo x (horizontal) em pixels.
@@ -389,27 +393,27 @@ class Draw {
      *                      - Se tiver mais de um valor, este será usado para os respectivos cantos e os cantos sem um valor definido ficará sem arredondamento.
      * @param {Boolean} isFilled valor booleano que indica se o retângulo deve ser preenchido após desenhado.
     */
-    roundRectangle(x, y, w, h, radii, isFilled = false) {
+   roundRectangle(x, y, w, h, radii, isFilled = false) {
         this.ctx.beginPath();
-
+        
         this.ctx.roundRect(x, y, w, h, radii);
         this.ctx.stroke();
-
+        
         this.ctx.closePath();
-
+        
         if (isFilled) {
             this.ctx.fill();
         }
     }
-
+    
     text(text, x, y, options = {}) {
         this.ctx.save();
         if (options.color) {
             this.ctx.fillStyle = options.color;
         }
-
+        
         this.ctx.font = `${options.fontSize ? options.fontSize : 10}px ${options.fontFamily ? options.fontFamily : "serif"}`;
-
+        
         if (options.maxWidth) {
             this.ctx.fillText(text, x, y - parseFloat(this.ctx.font.split("px")[0].split(" ")[this.ctx.font.split("px")[0].split(" ").length - 1]), options.maxWidth);
         } else {
@@ -420,16 +424,24 @@ class Draw {
 }
 
 
-const canvas = document.querySelector("canvas");
+const canvas = document.querySelector("#main-canvas");
 canvas.height = window.innerHeight;
 canvas.width = window.innerWidth;
 const ctx = canvas.getContext("2d");
+
+const drawingPreview = document.querySelector("#drawing-preview");
+drawingPreview.height = canvas.height;
+drawingPreview.width = canvas.width;
+const previewDraw = new Draw(drawingPreview);
+
 const lineWidthInput = document.querySelector("input#drawing-line-width");
 const drawingColorInput = document.querySelector("input#drawing-line-color");
 const resizer = document.querySelector("#resizer");
 const drawingOptions = document.querySelector("#drawing-options");
+const carac = document.querySelector("#caracteristics");
 const closeCanvasBtn = document.querySelector("#return");
-let pintando = false;
+// if the user is drawing, not if the drawing is drawing.
+let isDrawing = false;
 let lowestPosition = { x: 9999, y: 9999 };
 let highestPosition = { x: 0, y: 0 };
 let currentDrawingMode = "shape";
@@ -474,33 +486,51 @@ sharedWorker.port.onmessage = function (ev) {
     }
 }
 
+function init(){
+    draw.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
+    draw.ctx.strokeStyle = carac.children["drawing-line-color"].value;
+    draw.ctx.fillStyle = carac.children["drawing-line-color"].value;
+}
+init();
+
 HTMLElement.prototype.resetStyle = function(){
     this.style = "";
 }
 
 function caracteristicsChildren() {
-    return toArray(document.querySelector("#caracteristics").children);
+    return toArray(carac.children);
 }
 
 function showTextCaracteristics() {
     if (!caracteristicsChildren().filter((el) => { return el.getAttribute("data-text-caracteristic"); }).length) {
-        const carac = document.querySelector("#caracteristics");
-        const label1 = document.createElement("label");
-        label1.textContent = "Tamanho da fonte: ";
-        label1.setAttribute("for", "font-size");
+        const fontSizeLabel = document.createElement("label");
+        fontSizeLabel.textContent = "Tamanho da fonte: ";
+        fontSizeLabel.setAttribute("for", "font-size");
         
-        const input1 = document.createElement("input");
-        input1.type = "number";
-        input1.id = "font-size";
-        input1.min = "2";
+        const fontSizeInput = document.createElement("input");
+        fontSizeInput.type = "number";
+        fontSizeInput.id = "font-size";
+        fontSizeInput.min = "2";
         
-        const label2 = document.createElement("label");
-        label2.textContent = "Família da fonte: ";
-        label2.setAttribute("for", "font-family");
+        const fontSizeWrraper = document.createElement("div");
+        fontSizeWrraper.id = "font-size-div";
+        fontSizeWrraper.appendChild(fontSizeLabel);
+        fontSizeWrraper.appendChild(fontSizeInput);
+
         
-        const input2 = document.createElement("input");
-        input2.id = "font-family";
-        input2.setAttribute("list", "availableFonts");
+        const fontFamilyLabel = document.createElement("label");
+        fontFamilyLabel.textContent = "Família da fonte: ";
+        fontFamilyLabel.setAttribute("for", "font-family");
+        
+        const fontFamilyInput = document.createElement("input");
+        fontFamilyInput.id = "font-family";
+        fontFamilyInput.setAttribute("list", "availableFonts");
+
+        const fontFamilyWrraper = document.createElement("div");
+        fontFamilyWrraper.id = "font-family-div";
+        fontFamilyWrraper.appendChild(fontFamilyLabel);
+        fontFamilyWrraper.appendChild(fontFamilyInput);
+        
 
         const textInputLabel = document.createElement("label");
         textInputLabel.setAttribute("for", "text");
@@ -509,73 +539,64 @@ function showTextCaracteristics() {
         const textInput = document.createElement("input");
         textInput.id = "text";
 
-        input1.oninput = function () {
-            draw.ctx.font = `bold ${this.value}px ${input2.value}`;
-        }
-        input2.oninput = function () {
-            draw.ctx.font = `bold ${input1.value}px ${this.value}`;
-        }
-        drawingColorInput.oninput = function () {
-            draw.ctx.fillStyle = this.value;
-        }
+        const textInputWrraper = document.createElement("div");
+        textInputWrraper.id = "text-input-div";
+        textInputWrraper.appendChild(textInputLabel);
+        textInputWrraper.appendChild(textInput);
+
+
+        fontSizeInput.oninput = function () {draw.ctx.font = `bold ${this.value}px ${fontFamilyInput.value}`;}
+        fontFamilyInput.oninput = function () {draw.ctx.font = `bold ${fontSizeInput.value}px ${this.value}`;}
+        drawingColorInput.oninput = function () {draw.ctx.fillStyle = this.value;}
+
         if (fontsDatalist.children.length === 0) {
             (async function () {
+                let availableFonts;
+                const option = document.createElement("option");
+
                 if ("queryLocalFonts" in window) {
-                    let availableFonts = await window.queryLocalFonts();
-                    for (let i = 0; i < availableFonts.length; i++) {
-                        const option = document.createElement("option");
-                        option.textContent = availableFonts[i].fullName;
-                        option.value = availableFonts[i].fullName;
-                        if (availableFonts[i].style.split(" ").length > 1) {
-                            option.style.fontWeight = availableFonts[i].style.split(" ")[0];
-                            option.style.fontStyle = availableFonts[i].style.split(" ")[1];
-                        } else if (availableFonts[i].style === "Italic") {
-                            option.style.fontStyle = availableFonts[i].style;
-                        } else {
-                            option.style.fontWeight = availableFonts[i].style;
-                        }
-                        fontsDatalist.appendChild(option);
-                    }
-                } else {
-                    let availableFonts = ["sans-serif", "serif", "monospace"];
-                    for (let i = 0; i < availableFonts.length; i++) {
-                        const option = document.createElement("option")
-                        option.textContent = availableFonts[i];
-                        option.value = availableFonts[i];
-                        fontsDatalist.appendChild(option);
+                    availableFonts = await window.queryLocalFonts();
+                }else{
+                    availableFonts = ["sans-serif", "serif", "monospace"];
+                }
+
+                for (let i = 0; i < availableFonts.length; i++) {
+                    option.textContent = availableFonts[i].fullName || availableFonts[i];
+                    option.value = availableFonts[i].fullName || availableFonts[i];
+
+                    if (availableFonts[i]?.style.split(" ").length > 1) {
+                        option.style.fontStyle = availableFonts[i].style.split(" ")[1];
+                        option.style.fontWeight = availableFonts[i].style.split(" ")[0];
+                    } else if (availableFonts[i]?.style === "Italic") {
+                        option.style.fontStyle = availableFonts[i].style;
+                    } else {
+                        option.style.fontWeight = availableFonts[i]?.style;
                     }
                 }
+
+                fontsDatalist.appendChild(option);
             })();
         }
 
-        carac.children[3].remove();
-        carac.children[3].remove();
-        carac.children[3].remove();
+        carac.querySelector("br").remove();
+        carac.querySelector("label[for=drawing-line-width").remove();
+        carac.querySelector("input#drawing-line-width").remove();
 
-        //label1.setAttribute("data-text-caracteristic", "true");
-        //input1.setAttribute("data-text-caracteristic", "true");
-        //label2.setAttribute("data-text-caracteristic", "true");
-        //input2.setAttribute("data-text-caracteristic", "true");
+        //fontSizeLabel.setAttribute("data-text-caracteristic", "true");
+        //fontSizeInput.setAttribute("data-text-caracteristic", "true");
+        //fontFamilyLabel.setAttribute("data-text-caracteristic", "true");
+        //fontFamilyInput.setAttribute("data-text-caracteristic", "true");
         //textInputLabel.setAttribute("data-text-caracteristic", "true");
         //textInput.setAttribute("data-text-caracteristic", "true");
 
-        const wrraper1 = document.createElement("div");
-        const wrraper2 = document.createElement("div");
-        const textInputWrraper = document.createElement("div");
 
-        wrraper1.setAttribute("data-text-caracteristic", "true");
-        wrraper2.setAttribute("data-text-caracteristic", "true");
+        fontSizeWrraper.setAttribute("data-text-caracteristic", "true");
+        fontFamilyWrraper.setAttribute("data-text-caracteristic", "true");
         textInputWrraper.setAttribute("data-text-caracteristic", "true");
 
-        wrraper1.appendChild(label1);
-        wrraper1.appendChild(input1);
-        wrraper2.appendChild(label2);
-        wrraper2.appendChild(input2);
-        textInputWrraper.appendChild(textInputLabel);
-        textInputWrraper.appendChild(textInput);
         
-        carac.appendChild(wrraper1);
-        carac.appendChild(wrraper2);
+        carac.appendChild(fontSizeWrraper);
+        carac.appendChild(fontFamilyWrraper);
         carac.appendChild(textInputWrraper);
     }
 }
@@ -590,9 +611,9 @@ function hideTextCaracteristics() {
         label.setAttribute("for", "drawing-line-width");
         label.textContent = "Espessura: ";
 
-        document.querySelector("#caracteristics").appendChild(document.createElement("br"));
-        document.querySelector("#caracteristics").appendChild(label);
-        document.querySelector("#caracteristics").appendChild(lineWidthInput);
+        carac.appendChild(document.createElement("br"));
+        carac.appendChild(label);
+        carac.appendChild(lineWidthInput);
     }
 }
 
@@ -601,14 +622,16 @@ function showNewPathButton() {
         const button = document.createElement("button");
         button.style.display = "block";
         button.textContent = "Iniciar novo traço";
-        button.addEventListener("click", function () { draw.ctx.beginPath() })
-        document.querySelector("#caracteristics").appendChild(button);
+        button.addEventListener("click", function () { draw.ctx.beginPath() });
+
+        carac.appendChild(button);
     }
 }
 
 function hideNewPathButton() {
-    if (caracteristicsChildren().filter((el) => { return el.textContent === "Iniciar novo traço" }).length) {
-        caracteristicsChildren().filter((el) => { return el.textContent === "Iniciar novo traço" })[0].remove();
+    const newPathElements = caracteristicsChildren().filter((el) => { return el.textContent === "Iniciar novo traço" });
+    if (newPathElements.length) {
+        newPathElements[0].remove();
     }
 }
 
@@ -642,35 +665,19 @@ canvas.addEventListener("click", function (ev) {
 });
 
 function handleMouseOrTouchMove(event){
-    if (pintando && currentDrawingMode === "free") {
+    if (isDrawing && currentDrawingMode === "free") {
         draw.strokeLineTo(getEventPos(event).x - 2, getEventPos(event).y - 2);
-    } else if (pintando && currentDrawingMode === "text") {
-        try { document.querySelector(".shape-size").remove() } catch { }
-        const box = document.createElement("canvas");
-        box.classList.add("shape-size");
-        box.style.position = "absolute";
-        box.style.top = "0";
-        box.style.left = "0";
-        box.width = canvas.width;
-        box.height = canvas.height;
-        const temporaryDraw = new Draw(box);
-        temporaryDraw.ctx.font = draw.ctx.font;
-        temporaryDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
-        temporaryDraw.text(caracteristicsChildren()[5].children[1].value, lowestPosition.x, lowestPosition.y, { fontSize: parseInt(caracteristicsChildren()[3].children[1].value), fontFamily: caracteristicsChildren()[4].children[1].value });
-        box.style.pointerEvents = "none";
-        document.body.appendChild(box);
-    } else if (pintando && currentDrawingMode === "shape") {
-        try { document.querySelector(".shape-size").remove() } catch { }
-        const box = document.createElement("canvas");
-        box.classList.add("shape-size");
-        box.style.position = "absolute";
-        box.style.top = "0";
-        box.style.left = "0";
-        box.width = canvas.width;
-        box.height = canvas.height;
-        (new Draw(box)).rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
-        box.style.pointerEvents = "none";
-        document.body.appendChild(box);
+    } else {
+        if(isDrawing){
+            previewDraw.clear();
+            previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
+        }
+
+        if (isDrawing && currentDrawingMode === "text") {
+            previewDraw.ctx.font = draw.ctx.font;
+            drawText(previewDraw);
+        }
+        
     }
 }
 
@@ -689,38 +696,27 @@ function handleMouseDownOrTouchStart(event){
     console.log(event);
     if (currentDrawingMode !== "line") {
         draw.moveTo(getEventPos(event).x, getEventPos(event).y);
-    }
-    lowestPosition = getEventPos(event);
-    pintando = true;
-    if (currentDrawingMode !== "line") {
         draw.ctx.beginPath();
     }
+
+    lowestPosition = getEventPos(event);
+    isDrawing = true;
+
+    drawingPreview.style.display = "block";
 }
 
 function handleMouseUpOrTouchEnd(event){
-    console.log(event);
     highestPosition = getEventPos(event);
+
     if (currentDrawingMode === "shape") {
         switch (currentShapeToDraw) {
             case "equilateralTriangle":
-                let size;
                 if ((highestPosition.x - lowestPosition.x) < 0 && (highestPosition.y - lowestPosition.y) < 0) {
                     draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.max(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
-                } else if ((highestPosition.x - lowestPosition.x) < 0 && (highestPosition.y - lowestPosition.y) >= 0) {
-                    size = Math.min(Math.abs(highestPosition.x - lowestPosition.x), highestPosition.y - lowestPosition.y);
-                    if (size === Math.abs(highestPosition.x - lowestPosition.x)) {
-                        draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x);
-                    } else {
-                        draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, highestPosition.y - lowestPosition.y)
-                    }
-                } else if ((highestPosition.x - lowestPosition.x) >= 0 && (highestPosition.y - lowestPosition.y) < 0) {
-                    size = Math.min(highestPosition.x - lowestPosition.x, Math.abs(highestPosition.y - lowestPosition.y));
-                    if (size === Math.abs(highestPosition.y - lowestPosition.y)) {
-                        draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, highestPosition.y - lowestPosition.y);
-                    } else {
-                        draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x);
-                    }
-                } else {
+                }else if ((highestPosition.x - lowestPosition.x) < 0 || (highestPosition.y - lowestPosition.y) < 0) {
+                    let size = Math.min(Math.abs(highestPosition.x - lowestPosition.x), Math.abs(highestPosition.y - lowestPosition.y));
+                    draw["equilateralTriangle"](Math.min(highestPosition.x, lowestPosition.x), Math.min(highestPosition.y, lowestPosition.y), size);
+                }else {
                     draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.min(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
                 }
                 break;
@@ -735,7 +731,8 @@ function handleMouseUpOrTouchEnd(event){
                 break;
         }
     
-        try { document.querySelector(".shape-size").remove() } catch { }
+        drawingPreview.style.display = "none";
+        previewDraw.clear();
     }
     
     if (currentDrawingMode !== "line") {
@@ -743,11 +740,13 @@ function handleMouseUpOrTouchEnd(event){
     }
     
     if (currentDrawingMode === "text") {
-        try { document.querySelector(".shape-size").remove() } catch { }
-        draw.text(caracteristicsChildren()[5].children[1].value, lowestPosition.x, lowestPosition.y, { fontSize: caracteristicsChildren()[3].children[1].value, fontFamily: caracteristicsChildren()[4].children[1].value });
+        drawingPreview.style.display = "none";
+        previewDraw.clear();
+
+        drawText(draw);
     }
     
-    pintando = false;
+    isDrawing = false;
 }
 
 /**
@@ -763,10 +762,15 @@ function getEventPos(event){
     }
 }
 
+function drawText(drawToDrawText){
+    drawToDrawText.text(carac.children["text-input-div"].children["text"].value, lowestPosition.x, lowestPosition.y, { fontSize: carac.children["font-size-div"].children["font-size"].value, fontFamily: carac.children["font-family-div"].children["font-family"].value });
+}
+
 for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++) {
     const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
     const temporaryDraw = new Draw(alternateCtx.canvas);
     temporaryDraw.ctx.lineWidth = 1.5;
+    
     if (document.documentElement.classList.contains("dark-mode")) {
         temporaryDraw.ctx.strokeStyle = "white";
     } else {
@@ -792,6 +796,8 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
         currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
         document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
         this.classList.add("active");
+        hideNewPathButton();
+        hideTextCaracteristics();
     })
 }
 
@@ -896,7 +902,7 @@ lineWidthInput.addEventListener("input", function () {
     } else if(parseInt(lineWidthInput.value) % 2 === 0 && isPixelSharpnessTranslated){
         ctx.translate(-0.5, -0.5);
     }
-    
+
     ctx.lineWidth = lineWidthInput.value;
     draw.ctx.lineWidth = lineWidthInput.value;
 })
