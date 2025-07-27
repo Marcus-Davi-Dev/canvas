@@ -1,12 +1,12 @@
 :root {
-  --shape-selector-not-resized-height: 60.44px;
+    --shape-selector-not-resized-height: 60.44px;
 }
-        
+
 * {
     font-family: Arial, Helvetica, sans-serif;
     box-sizing: border-box;
 }
-        
+
 body,
 html {
     height: 100%;
@@ -15,6 +15,10 @@ html {
     margin: 0;
     padding: 0;
     color: var(--principal-color);
+}
+
+#main-canvas {
+    image-rendering: pixelated;
 }
 
 #return {
@@ -75,11 +79,9 @@ html {
     margin: 0;
     padding: var(--shape-selector-button-padding);
     border: 0;
-    background-color: var(
-    --button-background-color);
+    background-color: var(--button-background-color);
     border-radius: 4px;
-    box-shadow: 1px 1px 0 0 gray, var(
-    --inset-shape-box-shadow);
+    box-shadow: 1px 1px 0 0 gray, var(--inset-shape-box-shadow);
 }
 
 #shape-selector button:hover {
@@ -201,7 +203,7 @@ html {
     max-width: 100px;
 }
 
-#caracteristics > div[data-text-caracteristic] {
+#caracteristics>div[data-text-caracteristic] {
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;
@@ -226,18 +228,19 @@ dialog {
     background-color: var(--principal-background-color);
 }
 
-dialog > p {
+dialog>p {
     margin: 10px 0;
 }
 
-dialog button > a, dialog button {
+dialog button>a,
+dialog button {
     text-decoration: underline;
     color: var(--principal-color);
     background-color: var(--button-background-color);
     border-radius: 7px;
 }
 
-@media screen and (min-width: 560px){
+@media screen and (min-width: 560px) {
     #drawing-options.resized #drawing-type {
         margin: 0;
     }
@@ -247,14 +250,15 @@ dialog button > a, dialog button {
     }
 }
 
-@media screen and (max-width: 400px){
+@media screen and (max-width: 400px) {
+
     /* this grid design was created for 10 elements in the grid,
        if this changes, this design will have to change too.*/
     #shape-selector div {
         grid-template-columns: repeat(4, 1fr);
     }
 
-    #shape-selector #shapes :nth-child(n+9){
+    #shape-selector #shapes :nth-child(n+9) {
         grid-column: span 2;
     }
 }
