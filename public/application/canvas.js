@@ -47,7 +47,7 @@ class Draw {
         })
     }
 
-    clear(){
+    clear() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
@@ -361,26 +361,26 @@ class Draw {
      * @param {Number} h altura do hexágono em pixels.
      * @param {Boolean} isFilled valor booleano que indica se o hexágono deve ser preenchido após desenhado.
     */
-   heptagon(x, y, w, h, isFilled = false) {
-       this.ctx.beginPath();
-       
-       this.ctx.moveTo(x + w / 8 * 2, y);
-       this.ctx.lineTo(x + w / 8 * 6, y);
-       this.ctx.lineTo(x + w, y + h / 2);
-       this.ctx.lineTo(x + w / 8 * 6, y + h);
-       this.ctx.lineTo(x + w / 8 * 2, y + h);
-       this.ctx.lineTo(x, y + h / 2);
-       this.ctx.lineTo(x + w / 8 * 2, y);
-       if (isFilled) {
-           this.ctx.fill();
+    heptagon(x, y, w, h, isFilled = false) {
+        this.ctx.beginPath();
+
+        this.ctx.moveTo(x + w / 8 * 2, y);
+        this.ctx.lineTo(x + w / 8 * 6, y);
+        this.ctx.lineTo(x + w, y + h / 2);
+        this.ctx.lineTo(x + w / 8 * 6, y + h);
+        this.ctx.lineTo(x + w / 8 * 2, y + h);
+        this.ctx.lineTo(x, y + h / 2);
+        this.ctx.lineTo(x + w / 8 * 2, y);
+        if (isFilled) {
+            this.ctx.fill();
         } else {
             this.ctx.stroke();
         }
-        
+
         this.ctx.closePath();
-        
+
     }
-    
+
     /**
      * Desenha um retângulo com as bordas arredondadas.
      * @param {Number} x posição do retângulo no eixo x (horizontal) em pixels.
@@ -393,27 +393,62 @@ class Draw {
      *                      - Se tiver mais de um valor, este será usado para os respectivos cantos e os cantos sem um valor definido ficará sem arredondamento.
      * @param {Boolean} isFilled valor booleano que indica se o retângulo deve ser preenchido após desenhado.
     */
-   roundRectangle(x, y, w, h, radii, isFilled = false) {
+    roundRectangle(x, y, w, h, radii, isFilled = false) {
         this.ctx.beginPath();
-        
+
         this.ctx.roundRect(x, y, w, h, radii);
         this.ctx.stroke();
-        
+
         this.ctx.closePath();
-        
+
         if (isFilled) {
             this.ctx.fill();
         }
     }
-    
+
+    /**
+     * Draws a polygon with the amount of sides especified
+     * @param {Number} x position of the polygon in the x-axis in pixels.
+     * @param {Number} y position of the polygon in the y-axis in pixels.
+     * @param {Number} w width of the polygon in pixels.
+     * @param {Number} h height of the polygon in pixels.
+     * @param {Number} sides number of sides of the polygon.
+     */
+    polygon(x, y, w, h, sides) {
+        function toRad(deg) {
+            return deg / 180 * Math.PI;
+        }
+
+        // the angle to rotate to draw the line to the next vertex
+        const STEP = 360 / sides;
+
+        ctx.save();
+        ctx.translate(x + (w / 2), y + (h / 2));
+
+        // to make polygons with a even amount of sides not look 90-degrees rotated
+        if (sides % 2 === 0) {
+            ctx.rotate(toRad(STEP / 2));
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0 - (h / 2));
+        for (let i = 0; i < sides + 1; i++) {
+            ctx.lineTo(0, 0 - (h / 2));
+            ctx.stroke();
+
+            ctx.rotate(toRad(STEP));
+        }
+        ctx.restore();
+    }
+
     text(text, x, y, options = {}) {
         this.ctx.save();
         if (options.color) {
             this.ctx.fillStyle = options.color;
         }
-        
+
         this.ctx.font = `${options.fontSize ? options.fontSize : 10}px ${options.fontFamily ? options.fontFamily : "serif"}`;
-        
+
         if (options.maxWidth) {
             this.ctx.fillText(text, x, y - parseFloat(this.ctx.font.split("px")[0].split(" ")[this.ctx.font.split("px")[0].split(" ").length - 1]), options.maxWidth);
         } else {
@@ -486,14 +521,14 @@ sharedWorker.port.onmessage = function (ev) {
     }
 }
 
-function init(){
+function init() {
     draw.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
     draw.ctx.strokeStyle = carac.children["drawing-line-color"].value;
     draw.ctx.fillStyle = carac.children["drawing-line-color"].value;
 }
 init();
 
-HTMLElement.prototype.resetStyle = function(){
+HTMLElement.prototype.resetStyle = function () {
     this.style = "";
 }
 
@@ -506,22 +541,22 @@ function showTextCaracteristics() {
         const fontSizeLabel = document.createElement("label");
         fontSizeLabel.textContent = "Tamanho da fonte: ";
         fontSizeLabel.setAttribute("for", "font-size");
-        
+
         const fontSizeInput = document.createElement("input");
         fontSizeInput.type = "number";
         fontSizeInput.id = "font-size";
         fontSizeInput.min = "2";
-        
+
         const fontSizeWrraper = document.createElement("div");
         fontSizeWrraper.id = "font-size-div";
         fontSizeWrraper.appendChild(fontSizeLabel);
         fontSizeWrraper.appendChild(fontSizeInput);
 
-        
+
         const fontFamilyLabel = document.createElement("label");
         fontFamilyLabel.textContent = "Família da fonte: ";
         fontFamilyLabel.setAttribute("for", "font-family");
-        
+
         const fontFamilyInput = document.createElement("input");
         fontFamilyInput.id = "font-family";
         fontFamilyInput.setAttribute("list", "availableFonts");
@@ -530,12 +565,12 @@ function showTextCaracteristics() {
         fontFamilyWrraper.id = "font-family-div";
         fontFamilyWrraper.appendChild(fontFamilyLabel);
         fontFamilyWrraper.appendChild(fontFamilyInput);
-        
+
 
         const textInputLabel = document.createElement("label");
         textInputLabel.setAttribute("for", "text");
         textInputLabel.textContent = "Texto: ";
-        
+
         const textInput = document.createElement("input");
         textInput.id = "text";
 
@@ -545,9 +580,9 @@ function showTextCaracteristics() {
         textInputWrraper.appendChild(textInput);
 
 
-        fontSizeInput.oninput = function () {draw.ctx.font = `bold ${this.value}px ${fontFamilyInput.value}`;}
-        fontFamilyInput.oninput = function () {draw.ctx.font = `bold ${fontSizeInput.value}px ${this.value}`;}
-        drawingColorInput.oninput = function () {draw.ctx.fillStyle = this.value;}
+        fontSizeInput.oninput = function () { draw.ctx.font = `bold ${this.value}px ${fontFamilyInput.value}`; }
+        fontFamilyInput.oninput = function () { draw.ctx.font = `bold ${fontSizeInput.value}px ${this.value}`; }
+        drawingColorInput.oninput = function () { draw.ctx.fillStyle = this.value; }
 
         if (fontsDatalist.children.length === 0) {
             (async function () {
@@ -556,7 +591,7 @@ function showTextCaracteristics() {
 
                 if ("queryLocalFonts" in window) {
                     availableFonts = await window.queryLocalFonts();
-                }else{
+                } else {
                     availableFonts = ["sans-serif", "serif", "monospace"];
                 }
 
@@ -594,7 +629,7 @@ function showTextCaracteristics() {
         fontFamilyWrraper.setAttribute("data-text-caracteristic", "true");
         textInputWrraper.setAttribute("data-text-caracteristic", "true");
 
-        
+
         carac.appendChild(fontSizeWrraper);
         carac.appendChild(fontFamilyWrraper);
         carac.appendChild(textInputWrraper);
@@ -639,23 +674,23 @@ function hideNewPathButton() {
 canvas.addEventListener("mousemove", handleMouseOrTouchMove);
 canvas.addEventListener("mousedown", handleMouseDownOrTouchStart);
 canvas.addEventListener("mouseup", handleMouseUpOrTouchEnd);
-canvas.addEventListener("touchmove", function(ev){
+canvas.addEventListener("touchmove", function (ev) {
     ev.preventDefault();
     handleMouseOrTouchMove(ev);
-}, {passive: false});
-canvas.addEventListener("touchstart", function(ev){
+}, { passive: false });
+canvas.addEventListener("touchstart", function (ev) {
     ev.preventDefault();
     handleMouseDownOrTouchStart(ev);
-}, {passive: false});
-canvas.addEventListener("touchend", function(ev){
+}, { passive: false });
+canvas.addEventListener("touchend", function (ev) {
     ev.preventDefault();
     handleMouseUpOrTouchEnd(ev);
-}, {passive: false});
+}, { passive: false });
 
-canvas.addEventListener("touchcancel", function(ev){
+canvas.addEventListener("touchcancel", function (ev) {
     console.log(ev);
     console.log("cancel acima ^");
-}, {passive: false});
+}, { passive: false });
 
 canvas.addEventListener("click", function (ev) {
     if (currentDrawingMode === "line") {
@@ -664,11 +699,11 @@ canvas.addEventListener("click", function (ev) {
     }
 });
 
-function handleMouseOrTouchMove(event){
+function handleMouseOrTouchMove(event) {
     if (isDrawing && currentDrawingMode === "free") {
         draw.strokeLineTo(getEventPos(event).x - 2, getEventPos(event).y - 2);
     } else {
-        if(isDrawing && currentDrawingMode !== "line"){
+        if (isDrawing && currentDrawingMode !== "line") {
             previewDraw.clear();
             previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
         }
@@ -677,11 +712,11 @@ function handleMouseOrTouchMove(event){
             previewDraw.ctx.font = draw.ctx.font;
             drawText(previewDraw);
         }
-        
+
     }
 }
 
-function handleMouseDownOrTouchStart(event){
+function handleMouseDownOrTouchStart(event) {
     // if the user pressed the canvas, it was drawing,
     // what means that the canvas was changed, then everytime
     // the user try to reload to page or exit ask if it
@@ -705,7 +740,7 @@ function handleMouseDownOrTouchStart(event){
     drawingPreview.style.display = "block";
 }
 
-function handleMouseUpOrTouchEnd(event){
+function handleMouseUpOrTouchEnd(event) {
     highestPosition = getEventPos(event);
 
     if (currentDrawingMode === "shape") {
@@ -713,10 +748,10 @@ function handleMouseUpOrTouchEnd(event){
             case "equilateralTriangle":
                 if ((highestPosition.x - lowestPosition.x) < 0 && (highestPosition.y - lowestPosition.y) < 0) {
                     draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.max(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
-                }else if ((highestPosition.x - lowestPosition.x) < 0 || (highestPosition.y - lowestPosition.y) < 0) {
+                } else if ((highestPosition.x - lowestPosition.x) < 0 || (highestPosition.y - lowestPosition.y) < 0) {
                     let size = Math.min(Math.abs(highestPosition.x - lowestPosition.x), Math.abs(highestPosition.y - lowestPosition.y));
                     draw["equilateralTriangle"](Math.min(highestPosition.x, lowestPosition.x), Math.min(highestPosition.y, lowestPosition.y), size);
-                }else {
+                } else {
                     draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.min(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
                 }
                 break;
@@ -730,39 +765,39 @@ function handleMouseUpOrTouchEnd(event){
                 draw[currentShapeToDraw](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y);
                 break;
         }
-    
+
         drawingPreview.style.display = "none";
         previewDraw.clear();
     }
-    
+
     if (currentDrawingMode !== "line") {
         ctx.closePath();
     }
-    
+
     if (currentDrawingMode === "text") {
         drawingPreview.style.display = "none";
         previewDraw.clear();
 
         drawText(draw);
     }
-    
+
     isDrawing = false;
 }
 
 /**
  * @param {MouseEvent || TouchEvent} event
 */
-function getEventPos(event){
-    if(event.type === "touchend"){
-        return {x: Math.round(event.changedTouches[0].clientX), y: Math.round(event.changedTouches[0].clientY)};
-    }else if(event.type.startsWith("touch")){
-        return {x: Math.round(event.touches[0].clientX), y: Math.round(event.touches[0].clientY)};
-    }else{
-        return {x: Math.round(event.offsetX), y: Math.round(event.offsetY)};
+function getEventPos(event) {
+    if (event.type === "touchend") {
+        return { x: Math.round(event.changedTouches[0].clientX), y: Math.round(event.changedTouches[0].clientY) };
+    } else if (event.type.startsWith("touch")) {
+        return { x: Math.round(event.touches[0].clientX), y: Math.round(event.touches[0].clientY) };
+    } else {
+        return { x: Math.round(event.offsetX), y: Math.round(event.offsetY) };
     }
 }
 
-function drawText(drawToDrawText){
+function drawText(drawToDrawText) {
     drawToDrawText.text(carac.children["text-input-div"].children["text"].value, lowestPosition.x, lowestPosition.y, { fontSize: carac.children["font-size-div"].children["font-size"].value, fontFamily: carac.children["font-family-div"].children["font-family"].value });
 }
 
@@ -770,7 +805,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
     const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
     const temporaryDraw = new Draw(alternateCtx.canvas);
     temporaryDraw.ctx.lineWidth = 1.5;
-    
+
     if (document.documentElement.classList.contains("dark-mode")) {
         temporaryDraw.ctx.strokeStyle = "white";
     } else {
@@ -896,10 +931,10 @@ lineWidthInput.addEventListener("input", function () {
      * if odd and not translated: translate.
      * if even and translated: de-translate.
      * if even and not translated: do nothing.
-     */ 
-    if(parseInt(lineWidthInput.value) % 2 === 1 && !isPixelSharpnessTranslated){
+     */
+    if (parseInt(lineWidthInput.value) % 2 === 1 && !isPixelSharpnessTranslated) {
         ctx.translate(0.5, 0.5);
-    } else if(parseInt(lineWidthInput.value) % 2 === 0 && isPixelSharpnessTranslated){
+    } else if (parseInt(lineWidthInput.value) % 2 === 0 && isPixelSharpnessTranslated) {
         ctx.translate(-0.5, -0.5);
     }
 
@@ -967,12 +1002,12 @@ closeCanvasBtn.addEventListener('click', function () {
 });
 
 // background color change when scrolling for resizer wrraper
-drawingOptions.addEventListener("scroll", function(ev){
-    if(ev.target.scrollTop > 10){
+drawingOptions.addEventListener("scroll", function (ev) {
+    if (ev.target.scrollTop > 10) {
         resizer.parentElement.style.outline = "2px rgba(0, 0, 0, 0.4) solid";
         resizer.parentElement.style.backgroundColor = "rgb(38, 38, 48)";
-    }else{
+    } else {
         resizer.parentElement.style.outline = "none";
         resizer.parentElement.style.backgroundColor = "inherit";
     }
-}, {passive: true});
+}, { passive: true });
