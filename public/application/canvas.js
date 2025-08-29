@@ -282,14 +282,14 @@ class Draw {
     }
 
     /**
-     * Draw a trapezium.
-     * @param {Number} x trapezium position in the x-axis in pixels.
-     * @param {Number} y trapezium position in the x-axis in pixels.
-     * @param {Number} w trapezium width in pixels.
-     * @param {Number} h trapezium height in pixels.
-     * @param {Boolean} isFilled boolean value that indicates if the trapezium will be filled after being drawn.
+     * Draw a trapezoid.
+     * @param {Number} x trapezoid position in the x-axis in pixels.
+     * @param {Number} y trapezoid position in the x-axis in pixels.
+     * @param {Number} w trapezoid width in pixels.
+     * @param {Number} h trapezoid height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the trapezoid will be filled after being drawn.
      */
-    trapezium(x, y, w, h, isFilled = false) {
+    trapezoid(x, y, w, h, isFilled = false) {
         let widthPart = w / 5;
         this.ctx.beginPath();
 
@@ -309,15 +309,15 @@ class Draw {
     }
 
     /**
-     * Draw a oval.
-     * @param {Number} x oval position in the x-axis in pixels.
-     * @param {Number} y oval position in the y-axis in pixels.
-     * @param {Number} w oval width in pixels.
-     * @param {Number} h oval height in pixels.
+     * Draw a ellipse.
+     * @param {Number} x ellipse position in the x-axis in pixels.
+     * @param {Number} y ellipse position in the y-axis in pixels.
+     * @param {Number} w ellipse width in pixels.
+     * @param {Number} h ellipse height in pixels.
      * @param {Number} rotation oval rotation in degrees.
-     * @param {Boolean} isFilled boolean value that indicates if the oval will be filled after being drawn.
+     * @param {Boolean} isFilled boolean value that indicates if the ellipse will be filled after being drawn.
      */
-    oval(x, y, w, h, rotation = 0, isFilled = false) {
+    ellipse(x, y, w, h, rotation = 0, isFilled = false) {
         this.ctx.beginPath();
 
         this.ctx.ellipse(x, y, Math.abs(w), Math.abs(h), Math.abs(rotation) * Math.PI / 180, 0, 2 * Math.PI);
@@ -364,7 +364,7 @@ class Draw {
      * @param {Number} h hexagon height in pixels.
      * @param {Boolean} isFilled boolean value that indicates if the hexagon will be filled after being drawn.
     */
-    heptagon(x, y, w, h, isFilled = false) {
+    hexagon(x, y, w, h, isFilled = false) {
         this.ctx.beginPath();
 
         this.ctx.moveTo(x + w / 8 * 2, y);
@@ -821,7 +821,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
         case "circle":
             temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](temporaryDraw.canvas.width / 2, temporaryDraw.canvas.height / 2, 7.5, 0);
             break;
-        case "oval":
+        case "ellipse":
             temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](temporaryDraw.canvas.width / 2, temporaryDraw.canvas.height / 2, 16 / 3, 7);
             break;
         default:
