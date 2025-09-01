@@ -19,6 +19,7 @@ html {
 
 #main-canvas {
     image-rendering: pixelated;
+    cursor: crosshair;
 }
 
 #return {
