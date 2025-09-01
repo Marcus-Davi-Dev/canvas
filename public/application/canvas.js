@@ -590,7 +590,6 @@ function showTextCaracteristics() {
         if (fontsDatalist.children.length === 0) {
             (async function () {
                 let availableFonts;
-                const option = document.createElement("option");
 
                 if ("queryLocalFonts" in window) {
                     availableFonts = await window.queryLocalFonts();
@@ -599,6 +598,7 @@ function showTextCaracteristics() {
                 }
 
                 for (let i = 0; i < availableFonts.length; i++) {
+                    const option = document.createElement("option");
                     option.textContent = availableFonts[i].fullName || availableFonts[i];
                     option.value = availableFonts[i].fullName || availableFonts[i];
 
@@ -610,9 +610,9 @@ function showTextCaracteristics() {
                     } else {
                         option.style.fontWeight = availableFonts[i]?.style;
                     }
+                    fontsDatalist.appendChild(option);
                 }
 
-                fontsDatalist.appendChild(option);
             })();
         }
 
