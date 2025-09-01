@@ -992,8 +992,10 @@ lineWidthInput.addEventListener("input", function () {
      */
     if (parseInt(lineWidthInput.value) % 2 === 1 && !isPixelSharpnessTranslated) {
         ctx.translate(0.5, 0.5);
+        isPixelSharpnessTranslated = true;
     } else if (parseInt(lineWidthInput.value) % 2 === 0 && isPixelSharpnessTranslated) {
         ctx.translate(-0.5, -0.5);
+        isPixelSharpnessTranslated = false;
     }
 
     ctx.lineWidth = lineWidthInput.value;
