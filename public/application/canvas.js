@@ -673,6 +673,36 @@ function hideNewPathButton() {
     }
 }
 
+function showPolygonCaracteristics() {
+    if(document.querySelectorAll("[data-polygon-caracteristic]").length){
+        return;
+    }
+
+    const wrraper = document.createElement("div");
+    wrraper.id = "polygon-sides-div";
+    wrraper.setAttribute("data-polygon-caracteristic", "true");
+
+    const sidesInputLabel = document.createElement("label");
+    sidesInputLabel.setAttribute("for", "polygon-sides-input");
+    sidesInputLabel.id = "polygon-sides-label";
+    sidesInputLabel.textContent = "Número de lados:";
+
+    const sidesInput = document.createElement("input");
+    sidesInput.id = "polygon-sides-input";
+    sidesInput.type = "number";
+    sidesInput.min = "2";
+    sidesInput.value = "7";
+
+    wrraper.appendChild(sidesInputLabel);
+    wrraper.appendChild(sidesInput);
+
+    carac.appendChild(wrraper);
+};
+
+function hidePolygonCaracteristics() {
+    document.querySelectorAll("[data-polygon-caracteristic]").forEach((element) => { element.remove(); });
+}
+
 
 canvas.addEventListener("mousemove", handleMouseOrTouchMove);
 canvas.addEventListener("mousedown", handleMouseDownOrTouchStart);
@@ -764,6 +794,10 @@ function handleMouseUpOrTouchEnd(event) {
             case "oval":
                 draw["oval"](lowestPosition.x + (highestPosition.x - lowestPosition.x) / 2, lowestPosition.y + (highestPosition.y - lowestPosition.y) / 2, (highestPosition.x - lowestPosition.x) / 2, (highestPosition.y - lowestPosition.y) / 2);
                 break;
+            case "polygon":
+                const sides = parseInt(document.querySelector("#polygon-sides-input").value);
+                draw["polygon"](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y, sides);
+                break;
             default:
                 draw[currentShapeToDraw](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y);
                 break;
@@ -824,19 +858,37 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
         case "ellipse":
             temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](temporaryDraw.canvas.width / 2, temporaryDraw.canvas.height / 2, 16 / 3, 7);
             break;
+        case "polygon":
+            temporaryDraw.circle(temporaryDraw.ctx.canvas.width / 2, temporaryDraw.ctx.canvas.height / 2, temporaryDraw.ctx.canvas.width / 2, 0);
+            temporaryDraw.rectangle(temporaryDraw.ctx.canvas.width / 6.4, temporaryDraw.ctx.canvas.height / 6.4, temporaryDraw.ctx.canvas.width / 1.455, temporaryDraw.ctx.canvas.height / 1.455);
+            break;
         default:
             temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](0, 0, 16, 16);
             break;
     }
 
-    alternateCtx.canvas.parentElement.addEventListener("click", function () {
-        currentDrawingMode = "shape";
-        currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
-        document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
-        this.classList.add("active");
-        hideNewPathButton();
-        hideTextCaracteristics();
-    })
+    if(alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon"){
+        alternateCtx.canvas.parentElement.addEventListener("click", function () {
+            currentDrawingMode = "shape";
+            currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
+            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
+            this.classList.add("active");
+            hideNewPathButton();
+            hideTextCaracteristics();
+            showPolygonCaracteristics();
+        });
+    }else{
+        alternateCtx.canvas.parentElement.addEventListener("click", function () {
+            currentDrawingMode = "shape";
+            currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
+            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
+            this.classList.add("active");
+            hideNewPathButton();
+            hideTextCaracteristics();
+            hidePolygonCaracteristics();
+        });
+    }
+
 }
 
 for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) {
@@ -846,6 +898,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
             currentDrawingMode = this.getAttribute("data-type");
             hideTextCaracteristics();
             showNewPathButton();
+            hidePolygonCaracteristics();
             document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
             this.classList.add("active");
         })
@@ -864,6 +917,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
             currentDrawingMode = this.getAttribute("data-type");
             showTextCaracteristics();
             hideNewPathButton();
+            hidePolygonCaracteristics();
             document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
             this.classList.add("active");
         })
@@ -872,6 +926,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
             currentDrawingMode = document.querySelectorAll("button[data-type]")[i].getAttribute("data-type");
             hideTextCaracteristics();
             hideNewPathButton();
+            hidePolygonCaracteristics();
             document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
             this.classList.add("active");
         })
