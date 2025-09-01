@@ -734,7 +734,7 @@ canvas.addEventListener("click", function (ev) {
 
 function handleMouseOrTouchMove(event) {
     if (isDrawing && currentDrawingMode === "free") {
-        draw.strokeLineTo(getEventPos(event).x - 2, getEventPos(event).y - 2);
+        draw.strokeLineTo(getEventPos(event).x, getEventPos(event).y);
     } else {
         if (isDrawing && currentDrawingMode !== "line") {
             previewDraw.clear();
