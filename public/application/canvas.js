@@ -47,25 +47,28 @@ class Draw {
         })
     }
 
-    clear(){
+    clear() {
+        this.ctx.save();
+        this.ctx.resetTransform();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.restore();
     }
 
     /**
-     * Move a caneta de desenho para as coordenadas especificadas.
-     * @param {Number} x posição no eixo x em pixels
-     * @param {Number} y posição no eixo y em pixels
+     * Move the drawing pen to the especified coords.
+     * @param {Number} x position in the x-axis in pixels.
+     * @param {Number} y position in the y-axis in pixels.
      */
     moveTo(x, y) {
         this.ctx.moveTo(x, y);
     }
 
     /**
-     * Cria uma linha dos pontos [x1, y1] até os [x2, y2].
-     * @param {Number} x1 posição do primeiro ponto no eixo x em pixels 
-     * @param {Number} y1 posição do primeiro ponto no eixo y em pixels
-     * @param {Number} x2 posição do segundo ponto no eixo x em pixels
-     * @param {Number} y2 posição do segundo ponto no eixo y em pixels
+     * Create a line from the point [x1, y1] to the point [x2, y2].
+     * @param {Number} x1 first point position in the x-axis in pixels. 
+     * @param {Number} y1 first point position in the y-axis in pixels.
+     * @param {Number} x2 second point position in the x-axis in pixels.
+     * @param {Number} y2 second point position in the y-axis in pixels.
      */
     line(x1, y1, x2, y2) {
         this.ctx.moveTo(x1, y1);
@@ -73,11 +76,11 @@ class Draw {
     }
 
     /**
-     * Cria uma linha dos pontos [x1, y1] até os [x2, y2] e mostra no canvas.
-     * @param {Number} x1 posição do primeiro ponto no eixo x em pixels
-     * @param {Number} y1 posição do primeiro ponto no eixo y em pixels
-     * @param {Number} x2 posição do segundo ponto no eixo x em pixels
-     * @param {Number} y2 posição do segundo ponto no eixo y em pixels
+     * Create a line from the point [x1, y1] to the point [x2, y2] and show in the canvas.
+     * @param {Number} x1 first point position in the x-axis in pixels.
+     * @param {Number} y1 first point position in the y-axis in pixels.
+     * @param {Number} x2 second point position in the x-axis in pixels.
+     * @param {Number} y2 second point position in the y-axis in pixels.
      */
     strokeLine(x1, y1, x2, y2) {
         this.ctx.moveTo(x1, y1);
@@ -86,18 +89,18 @@ class Draw {
     }
 
     /**
-     * Desenha uma linha até as coordenadas [x, y].
-     * @param {Number} x onde a linha terminará no eixo x em pixels
-     * @param {Number} y onde a linha terminará no eixo y em pixels
+     * Draw a line to the point [x, y].
+     * @param {Number} x where the line will end in the x-axis in pixels
+     * @param {Number} y where the line will end in the y-axis in pixels
      */
     lineTo(x, y) {
         this.ctx.lineTo(x, y);
     }
 
     /**
-     * Desenha uma linha até as coordenadas [x, y] e mostra no canvas.
-     * @param {Number} x onde a linha terminará no eixo x em pixels.
-     * @param {Number} y onde a linha terminará no eixo y em pixels
+     * Draw a line to the point [x, y] and show in the canvas.
+     * @param {Number} x where the line will end in the x-axis in pixels.
+     * @param {Number} y where the line will end in the y-axis in pixels.
      */
     strokeLineTo(x, y) {
         this.ctx.lineTo(x, y);
@@ -105,12 +108,12 @@ class Draw {
     }
 
     /**
-     * Desenha um círculo centralizado nos pontos x e y.
-     * @param {Number} x posição do centro do círculo no eixo x em pixels.
-     * @param {Number} y posição do centro do círculo no eixo y em pixels.
-     * @param {Number} radius metade do diâmetro do círculo em pixels.
-     * @param {Number} startAngle ângulo de início em radianos.
-     * @param {Boolean} isFilled valor booleano que indica se o círculo será preenchido após desenhado.
+     * Draw a circle centered in the points x and y.
+     * @param {Number} x center of the circle position in the x-axis in pixels.
+     * @param {Number} y center of the circle position in the y-axis in pixels.
+     * @param {Number} radius half the diameter of the circle in pixels.
+     * @param {Number} startAngle initial angle in radians.
+     * @param {Boolean} isFilled boolean value that indicates if the circle will be filled after being drawn.
      */
     circle(x, y, radius, startAngle, isFilled = false) {
         this.ctx.beginPath();
@@ -128,12 +131,12 @@ class Draw {
     }
 
     /**
-     * Desenha um retângulo.
-     * @param {Number} x  posição do retângulo no eixo x (horizontal) em pixels.
-     * @param {Number} y  posição do retângulo no eixo y (vertical) em pixels.
-     * @param {Number} w  largura do retângulo em pixels.
-     * @param {Number} h  altura do retângulo em pixels.
-     * @param {Boolean} isFilled  valor booleano que indica se o retângulo será preenchido após desenhado.
+     * Draw a rectangle.
+     * @param {Number} x rectangle position in the x-axis in pixels.
+     * @param {Number} y rectangle position in the y-axis in pixels.
+     * @param {Number} w rectangle width in pixels.
+     * @param {Number} h rectangle height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the rectangle will be filled after being drawn.
     */
     rectangle(x, y, w, h, isFilled = false) {
         this.ctx.beginPath();
@@ -149,12 +152,12 @@ class Draw {
     }
 
     /**
-     * Desenha um losango.
-     * @param {Number} x  posição do losango no eixo x (horizontal) em pixels.
-     * @param {Number} y  posição do losango no eixo y (vertical) em pixels.
-     * @param {Number} w  largura do losango.
-     * @param {Number} h  altura do losango.
-     * @param {Boolean} isFilled  valor booleano que indica se o losango será preenchido após desenhado.
+     * Draw a diamond.
+     * @param {Number} x diamond position in the x-axis in pixels.
+     * @param {Number} y diamond position in the y-axis in pixels.
+     * @param {Number} w diamond width in pixels.
+     * @param {Number} h diamond height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the diamond will be filled after being drawn.
     */
     diamond(x, y, w, h, isFilled = false) {
         this.ctx.beginPath();
@@ -175,12 +178,12 @@ class Draw {
     }
 
     /**
-     * Desenha um triângulo.
-     * @param {Number} x posição do triângulo no eixo x (horizontal) em pixels.
-     * @param {Number} y posição do triângulo no eixo y (vertical) em pixels.
-     * @param {Number} w largura do triângulo.
-     * @param {Number} h altura do triângulo.
-     * @param {Boolean} isFilled valor booleano que indica se o triângulo será preenchido após desenhado.
+     * Draw a triangle.
+     * @param {Number} x triangle position in the x-axis in pixels.
+     * @param {Number} y triangle position in the y-axis in pixels.
+     * @param {Number} w triangle width in pixels.
+     * @param {Number} h triangle height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the triangle will be filled after being drawn.
      */
     triangle(x, y, w, h, isFilled = false) {
         this.ctx.beginPath();
@@ -200,11 +203,11 @@ class Draw {
     }
 
     /**
-     * Desenha um triângulo equilátero.
-     * @param {Number} x posição do triângulo equilátero no eixo x (horizontal) em pixels.
-     * @param {Number} y posição do triângulo equilátero no eixo y (vertical) em pixels.
-     * @param {Number} size tamanho do triângulo equilátero em pixels. Será usado como altura e largura do triângulo.
-     * @param {Boolean} isFilled valor booleano que indica se o triângulo equilátero deve ser preenchido após desenhado.
+     * Draw a equilateral triangle.
+     * @param {Number} x equilateral triangle position in the x-axis in pixels.
+     * @param {Number} y equilateral triangle position in the y-axis in pixels.
+     * @param {Number} size equilateral triangle size in pixels. Will be used as the width and height.
+     * @param {Boolean} isFilled boolean value that indicates if the equilateral triangle will be filled after being drawn.
     */
     equilateralTriangle(x, y, size, isFilled = false) {
         let w = size;
@@ -226,49 +229,49 @@ class Draw {
     }
 
     /**
-     * Desenha uma estrela.
-     * @param {Number} x posição da estrela no eixo x (horizontal) em pixels.
-     * @param {Number} y posição da estrela no eixo y (vertical) em pixels.
-     * @param {Number} w largura da estrela em pixels.
-     * @param {Number} h altura da estrela em pixels.
-     * @param {Boolean} isFilled valor booleano que indica se a estrela deve ser preenchida após desenhada.
+     * Draw a star.
+     * @param {Number} x star position in the x-axis in pixels.
+     * @param {Number} y star position in the y-axis in pixels.
+     * @param {Number} w star width in pixels.
+     * @param {Number} h star height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the star will be filled after being drawn.
      */
     star(x, y, w, h, isFilled = false) {
         let heightPart = h / 5;
         let widthPart = w / 5;
 
         this.ctx.beginPath();
-        // --------- "/" do cone superior (^). ---------
+        // --------- "/" of the top cone (^). ---------
         this.ctx.moveTo(x + w / 2, y);
         this.ctx.lineTo(x + widthPart * 1.85, y + heightPart * 1.8);
-        // --------- "\" do cone superior (^). ---------
+        // --------- "\" of the top cone (^). ---------
         this.ctx.moveTo(x + w / 2, y);
         this.ctx.lineTo(x + widthPart * 3.15, y + heightPart * 1.8);
 
-        // --------- parte superior do cone esquerdo ("<"). ---------
-        // move para a ponta inferior esquerda do cone superior.
+        // --------- top line of the left cone ("<"). ---------
+        // move to the lower left tip of the upper cone.
         this.ctx.moveTo(x + widthPart * 1.85, y + heightPart * 1.8);
         this.ctx.lineTo(x, y + heightPart * 1.8);
-        // --------- parte inferior do cone esquerdo ("<"). ---------
+        // --------- bottom line of the left cone ("<"). ---------
         this.ctx.lineTo(x + w / 3 - (w / 18), y + (h / 2.7) * 1.667);
 
-        // --------- "\" do cone inferior esquerdo. ---------
+        // --------- "\" of the left bottom cone. ---------
         this.ctx.lineTo(x + (w / 3) / 2, y + h);
-        // --------- "/" do cone inferior esquerdo. ---------
+        // --------- "/" of the left bottom cone. ---------
         this.ctx.lineTo(x + w / 2, y + heightPart * 3.5);
 
-        // --------- "\" do cone inferior direito. ---------
+        // --------- "\" of the right bottom cone. ---------
         this.ctx.lineTo(x + (w / 3) * 2.5, y + h);
-        // --------- "/" do cone inferior direito. ---------
+        // --------- "/" of the right bottom cone. ---------
         this.ctx.lineTo(x + (w / 3) * 2.3 - (w / 18), y + (h / 2.7) * 1.667);
 
-        // --------- parte inferior do cone direito (">"). ---------
+        // --------- bottom line of the right cone (">"). ---------
         this.ctx.lineTo(x + w, y + heightPart * 1.8);
-        // --------- parte superior do cone direito (">"). ---------
+        // --------- top line of the right cone (">"). ---------
         this.ctx.moveTo(x + widthPart * 3.15, y + heightPart * 1.8);
         this.ctx.lineTo(x + w, y + heightPart * 1.8);
 
-        // exibe o desenho.
+        // show the drawing.
         if (isFilled) {
             this.ctx.fill();
         } else {
@@ -279,14 +282,14 @@ class Draw {
     }
 
     /**
-     * Desenha um trapézio.
-     * @param {Number} x posição do trapézio no eixo x (horizontal) em pixels.
-     * @param {Number} y posição do trapézio no eixo y (vertical) em pixels.
-     * @param {Number} w largura do trapézio em pixels.
-     * @param {Number} h altura do trapézio em pixels.
-     * @param {Boolean} isFilled valor booleano que indica se o trapézio deve ser preenchido após desenhado.
+     * Draw a trapezoid.
+     * @param {Number} x trapezoid position in the x-axis in pixels.
+     * @param {Number} y trapezoid position in the x-axis in pixels.
+     * @param {Number} w trapezoid width in pixels.
+     * @param {Number} h trapezoid height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the trapezoid will be filled after being drawn.
      */
-    trapezium(x, y, w, h, isFilled = false) {
+    trapezoid(x, y, w, h, isFilled = false) {
         let widthPart = w / 5;
         this.ctx.beginPath();
 
@@ -306,15 +309,15 @@ class Draw {
     }
 
     /**
-     * Desenha um oval.
-     * @param {Number} x posição do oval no eixo x (horizontal) em pixels.
-     * @param {Number} y posição do oval no eixo y (vertical) em pixels.
-     * @param {Number} w largura do oval em pixels.
-     * @param {Number} h altura do oval em pixels.
-     * @param {Number} rotation rotação do oval em graus.
-     * @param {Boolean} isFilled valor booleano que indica se o oval deve ser preenchido após desenhado.
+     * Draw a ellipse.
+     * @param {Number} x ellipse position in the x-axis in pixels.
+     * @param {Number} y ellipse position in the y-axis in pixels.
+     * @param {Number} w ellipse width in pixels.
+     * @param {Number} h ellipse height in pixels.
+     * @param {Number} rotation oval rotation in degrees.
+     * @param {Boolean} isFilled boolean value that indicates if the ellipse will be filled after being drawn.
      */
-    oval(x, y, w, h, rotation = 0, isFilled = false) {
+    ellipse(x, y, w, h, rotation = 0, isFilled = false) {
         this.ctx.beginPath();
 
         this.ctx.ellipse(x, y, Math.abs(w), Math.abs(h), Math.abs(rotation) * Math.PI / 180, 0, 2 * Math.PI);
@@ -328,12 +331,12 @@ class Draw {
     }
 
     /**
-     * Desenha um pentágono.
-     * @param {Number} x posição do pentágono no eixo x (horizontal) em pixels.
-     * @param {Number} y posição do pentágono no eixo y (vertical) em pixels.
-     * @param {Number} w largura do pentágono em pixels.
-     * @param {Number} h altura do pentágono em pixels.
-     * @param {Boolean} isFilled valor booleano que indica se o pentágono deve ser preenchido após desenhado.
+     * Draw a pentagon.
+     * @param {Number} x pentagon position in the x-axis in pixels.
+     * @param {Number} y pentagon position in the y-axis in pixels.
+     * @param {Number} w pentagon width in pixels.
+     * @param {Number} h pentagon height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the pentagon will be filled after being drawn.
      */
     pentagon(x, y, w, h, isFilled = false) {
         this.ctx.beginPath();
@@ -354,66 +357,101 @@ class Draw {
     }
 
     /**
-     * Desenha um hexágono.
-     * @param {Number} x posição do hexágono no eixo x (horizontal) em pixels.
-     * @param {Number} y posição do hexágono no eixo y (vertical) em pixels.
-     * @param {Number} w largura do hexágono em pixels.
-     * @param {Number} h altura do hexágono em pixels.
-     * @param {Boolean} isFilled valor booleano que indica se o hexágono deve ser preenchido após desenhado.
+     * Draw a hexagon.
+     * @param {Number} x hexagon position in the x-axis in pixels.
+     * @param {Number} y hexagon position in the y-axis in pixels.
+     * @param {Number} w hexagon width in pixels.
+     * @param {Number} h hexagon height in pixels.
+     * @param {Boolean} isFilled boolean value that indicates if the hexagon will be filled after being drawn.
     */
-   heptagon(x, y, w, h, isFilled = false) {
-       this.ctx.beginPath();
-       
-       this.ctx.moveTo(x + w / 8 * 2, y);
-       this.ctx.lineTo(x + w / 8 * 6, y);
-       this.ctx.lineTo(x + w, y + h / 2);
-       this.ctx.lineTo(x + w / 8 * 6, y + h);
-       this.ctx.lineTo(x + w / 8 * 2, y + h);
-       this.ctx.lineTo(x, y + h / 2);
-       this.ctx.lineTo(x + w / 8 * 2, y);
-       if (isFilled) {
-           this.ctx.fill();
+    hexagon(x, y, w, h, isFilled = false) {
+        this.ctx.beginPath();
+
+        this.ctx.moveTo(x + w / 8 * 2, y);
+        this.ctx.lineTo(x + w / 8 * 6, y);
+        this.ctx.lineTo(x + w, y + h / 2);
+        this.ctx.lineTo(x + w / 8 * 6, y + h);
+        this.ctx.lineTo(x + w / 8 * 2, y + h);
+        this.ctx.lineTo(x, y + h / 2);
+        this.ctx.lineTo(x + w / 8 * 2, y);
+        if (isFilled) {
+            this.ctx.fill();
         } else {
             this.ctx.stroke();
         }
-        
+
         this.ctx.closePath();
-        
+
     }
-    
+
     /**
-     * Desenha um retângulo com as bordas arredondadas.
-     * @param {Number} x posição do retângulo no eixo x (horizontal) em pixels.
-     * @param {Number} y posição do retângulo no eixo y (vertical) em pixels.
-     * @param {Number} w largura do hexágono em pixels.
-     * @param {Number} h altura do hexágono em pixels.
-     * @param {Array} radii array com o arredondamento das bordas em pixels.
-     *                      - O primeiro valor será usado para o arredondamento da borda superior esquerda, o segundo para a borda superior direita e assim por diante.
-     *                      - Se tiver só um valor, este será utilizado em todos os 4 cantos.
-     *                      - Se tiver mais de um valor, este será usado para os respectivos cantos e os cantos sem um valor definido ficará sem arredondamento.
-     * @param {Boolean} isFilled valor booleano que indica se o retângulo deve ser preenchido após desenhado.
+     * Draw a rectangle with rounded borders.
+     * @param {Number} x position of the rectangle in the x-axis in pixels.
+     * @param {Number} y position of the rectangle in the y-axis in pixels.
+     * @param {Number} w width of the rectangle in pixels.
+     * @param {Number} h height of the rectangle in pixels.
+     * @param {Array} radii array of the borders radii in pixels.
+     *                      - The first value will be used to indicate the radii of the top left corner, the second value to the top right corner and so on.
+     *                      - If there is only one value, it will be used on all the borders.
+     *                      - If a corner does not have a value in the array, it will not be rounded.
+     * @param {Boolean} isFilled boolean value that indicates if the rectangle will be filled after being drawn.
     */
-   roundRectangle(x, y, w, h, radii, isFilled = false) {
+    roundRectangle(x, y, w, h, radii, isFilled = false) {
         this.ctx.beginPath();
-        
+
         this.ctx.roundRect(x, y, w, h, radii);
         this.ctx.stroke();
-        
+
         this.ctx.closePath();
-        
+
         if (isFilled) {
             this.ctx.fill();
         }
     }
-    
+
+    /**
+     * Draws a polygon with the amount of sides especified
+     * @param {Number} x position of the polygon in the x-axis in pixels.
+     * @param {Number} y position of the polygon in the y-axis in pixels.
+     * @param {Number} w width of the polygon in pixels.
+     * @param {Number} h height of the polygon in pixels.
+     * @param {Number} sides number of sides of the polygon.
+     */
+    polygon(x, y, w, h, sides) {
+        function toRad(deg) {
+            return deg / 180 * Math.PI;
+        }
+
+        // the angle to rotate to draw the line to the next vertex
+        const STEP = 360 / sides;
+
+        ctx.save();
+        ctx.translate(x + (w / 2), y + (h / 2));
+
+        // to make polygons with a even amount of sides not look 90-degrees rotated
+        if (sides % 2 === 0) {
+            ctx.rotate(toRad(STEP / 2));
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0 - (h / 2));
+        for (let i = 0; i < sides + 1; i++) {
+            ctx.lineTo(0, 0 - (h / 2));
+            ctx.stroke();
+
+            ctx.rotate(toRad(STEP));
+        }
+        ctx.restore();
+    }
+
     text(text, x, y, options = {}) {
         this.ctx.save();
         if (options.color) {
             this.ctx.fillStyle = options.color;
         }
-        
+
         this.ctx.font = `${options.fontSize ? options.fontSize : 10}px ${options.fontFamily ? options.fontFamily : "serif"}`;
-        
+
         if (options.maxWidth) {
             this.ctx.fillText(text, x, y - parseFloat(this.ctx.font.split("px")[0].split(" ")[this.ctx.font.split("px")[0].split(" ").length - 1]), options.maxWidth);
         } else {
@@ -486,14 +524,14 @@ sharedWorker.port.onmessage = function (ev) {
     }
 }
 
-function init(){
+function init() {
     draw.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
     draw.ctx.strokeStyle = carac.children["drawing-line-color"].value;
     draw.ctx.fillStyle = carac.children["drawing-line-color"].value;
 }
 init();
 
-HTMLElement.prototype.resetStyle = function(){
+HTMLElement.prototype.resetStyle = function () {
     this.style = "";
 }
 
@@ -506,22 +544,22 @@ function showTextCaracteristics() {
         const fontSizeLabel = document.createElement("label");
         fontSizeLabel.textContent = "Tamanho da fonte: ";
         fontSizeLabel.setAttribute("for", "font-size");
-        
+
         const fontSizeInput = document.createElement("input");
         fontSizeInput.type = "number";
         fontSizeInput.id = "font-size";
         fontSizeInput.min = "2";
-        
+
         const fontSizeWrraper = document.createElement("div");
         fontSizeWrraper.id = "font-size-div";
         fontSizeWrraper.appendChild(fontSizeLabel);
         fontSizeWrraper.appendChild(fontSizeInput);
 
-        
+
         const fontFamilyLabel = document.createElement("label");
         fontFamilyLabel.textContent = "Família da fonte: ";
         fontFamilyLabel.setAttribute("for", "font-family");
-        
+
         const fontFamilyInput = document.createElement("input");
         fontFamilyInput.id = "font-family";
         fontFamilyInput.setAttribute("list", "availableFonts");
@@ -530,12 +568,12 @@ function showTextCaracteristics() {
         fontFamilyWrraper.id = "font-family-div";
         fontFamilyWrraper.appendChild(fontFamilyLabel);
         fontFamilyWrraper.appendChild(fontFamilyInput);
-        
+
 
         const textInputLabel = document.createElement("label");
         textInputLabel.setAttribute("for", "text");
         textInputLabel.textContent = "Texto: ";
-        
+
         const textInput = document.createElement("input");
         textInput.id = "text";
 
@@ -545,9 +583,9 @@ function showTextCaracteristics() {
         textInputWrraper.appendChild(textInput);
 
 
-        fontSizeInput.oninput = function () {draw.ctx.font = `bold ${this.value}px ${fontFamilyInput.value}`;}
-        fontFamilyInput.oninput = function () {draw.ctx.font = `bold ${fontSizeInput.value}px ${this.value}`;}
-        drawingColorInput.oninput = function () {draw.ctx.fillStyle = this.value;}
+        fontSizeInput.oninput = function () { draw.ctx.font = `bold ${this.value}px ${fontFamilyInput.value}`; }
+        fontFamilyInput.oninput = function () { draw.ctx.font = `bold ${fontSizeInput.value}px ${this.value}`; }
+        drawingColorInput.oninput = function () { draw.ctx.fillStyle = this.value; }
 
         if (fontsDatalist.children.length === 0) {
             (async function () {
@@ -556,7 +594,7 @@ function showTextCaracteristics() {
 
                 if ("queryLocalFonts" in window) {
                     availableFonts = await window.queryLocalFonts();
-                }else{
+                } else {
                     availableFonts = ["sans-serif", "serif", "monospace"];
                 }
 
@@ -594,7 +632,7 @@ function showTextCaracteristics() {
         fontFamilyWrraper.setAttribute("data-text-caracteristic", "true");
         textInputWrraper.setAttribute("data-text-caracteristic", "true");
 
-        
+
         carac.appendChild(fontSizeWrraper);
         carac.appendChild(fontFamilyWrraper);
         carac.appendChild(textInputWrraper);
@@ -635,27 +673,57 @@ function hideNewPathButton() {
     }
 }
 
+function showPolygonCaracteristics() {
+    if(document.querySelectorAll("[data-polygon-caracteristic]").length){
+        return;
+    }
+
+    const wrraper = document.createElement("div");
+    wrraper.id = "polygon-sides-div";
+    wrraper.setAttribute("data-polygon-caracteristic", "true");
+
+    const sidesInputLabel = document.createElement("label");
+    sidesInputLabel.setAttribute("for", "polygon-sides-input");
+    sidesInputLabel.id = "polygon-sides-label";
+    sidesInputLabel.textContent = "Número de lados:";
+
+    const sidesInput = document.createElement("input");
+    sidesInput.id = "polygon-sides-input";
+    sidesInput.type = "number";
+    sidesInput.min = "2";
+    sidesInput.value = "7";
+
+    wrraper.appendChild(sidesInputLabel);
+    wrraper.appendChild(sidesInput);
+
+    carac.appendChild(wrraper);
+};
+
+function hidePolygonCaracteristics() {
+    document.querySelectorAll("[data-polygon-caracteristic]").forEach((element) => { element.remove(); });
+}
+
 
 canvas.addEventListener("mousemove", handleMouseOrTouchMove);
 canvas.addEventListener("mousedown", handleMouseDownOrTouchStart);
 canvas.addEventListener("mouseup", handleMouseUpOrTouchEnd);
-canvas.addEventListener("touchmove", function(ev){
+canvas.addEventListener("touchmove", function (ev) {
     ev.preventDefault();
     handleMouseOrTouchMove(ev);
-}, {passive: false});
-canvas.addEventListener("touchstart", function(ev){
+}, { passive: false });
+canvas.addEventListener("touchstart", function (ev) {
     ev.preventDefault();
     handleMouseDownOrTouchStart(ev);
-}, {passive: false});
-canvas.addEventListener("touchend", function(ev){
+}, { passive: false });
+canvas.addEventListener("touchend", function (ev) {
     ev.preventDefault();
     handleMouseUpOrTouchEnd(ev);
-}, {passive: false});
+}, { passive: false });
 
-canvas.addEventListener("touchcancel", function(ev){
+canvas.addEventListener("touchcancel", function (ev) {
     console.log(ev);
     console.log("cancel acima ^");
-}, {passive: false});
+}, { passive: false });
 
 canvas.addEventListener("click", function (ev) {
     if (currentDrawingMode === "line") {
@@ -664,11 +732,11 @@ canvas.addEventListener("click", function (ev) {
     }
 });
 
-function handleMouseOrTouchMove(event){
+function handleMouseOrTouchMove(event) {
     if (isDrawing && currentDrawingMode === "free") {
         draw.strokeLineTo(getEventPos(event).x - 2, getEventPos(event).y - 2);
     } else {
-        if(isDrawing && currentDrawingMode !== "line"){
+        if (isDrawing && currentDrawingMode !== "line") {
             previewDraw.clear();
             previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
         }
@@ -677,11 +745,11 @@ function handleMouseOrTouchMove(event){
             previewDraw.ctx.font = draw.ctx.font;
             drawText(previewDraw);
         }
-        
+
     }
 }
 
-function handleMouseDownOrTouchStart(event){
+function handleMouseDownOrTouchStart(event) {
     // if the user pressed the canvas, it was drawing,
     // what means that the canvas was changed, then everytime
     // the user try to reload to page or exit ask if it
@@ -705,7 +773,7 @@ function handleMouseDownOrTouchStart(event){
     drawingPreview.style.display = "block";
 }
 
-function handleMouseUpOrTouchEnd(event){
+function handleMouseUpOrTouchEnd(event) {
     highestPosition = getEventPos(event);
 
     if (currentDrawingMode === "shape") {
@@ -713,10 +781,10 @@ function handleMouseUpOrTouchEnd(event){
             case "equilateralTriangle":
                 if ((highestPosition.x - lowestPosition.x) < 0 && (highestPosition.y - lowestPosition.y) < 0) {
                     draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.max(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
-                }else if ((highestPosition.x - lowestPosition.x) < 0 || (highestPosition.y - lowestPosition.y) < 0) {
+                } else if ((highestPosition.x - lowestPosition.x) < 0 || (highestPosition.y - lowestPosition.y) < 0) {
                     let size = Math.min(Math.abs(highestPosition.x - lowestPosition.x), Math.abs(highestPosition.y - lowestPosition.y));
                     draw["equilateralTriangle"](Math.min(highestPosition.x, lowestPosition.x), Math.min(highestPosition.y, lowestPosition.y), size);
-                }else {
+                } else {
                     draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.min(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
                 }
                 break;
@@ -726,43 +794,47 @@ function handleMouseUpOrTouchEnd(event){
             case "oval":
                 draw["oval"](lowestPosition.x + (highestPosition.x - lowestPosition.x) / 2, lowestPosition.y + (highestPosition.y - lowestPosition.y) / 2, (highestPosition.x - lowestPosition.x) / 2, (highestPosition.y - lowestPosition.y) / 2);
                 break;
+            case "polygon":
+                const sides = parseInt(document.querySelector("#polygon-sides-input").value);
+                draw["polygon"](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y, sides);
+                break;
             default:
                 draw[currentShapeToDraw](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y);
                 break;
         }
-    
+
         drawingPreview.style.display = "none";
         previewDraw.clear();
     }
-    
+
     if (currentDrawingMode !== "line") {
         ctx.closePath();
     }
-    
+
     if (currentDrawingMode === "text") {
         drawingPreview.style.display = "none";
         previewDraw.clear();
 
         drawText(draw);
     }
-    
+
     isDrawing = false;
 }
 
 /**
  * @param {MouseEvent || TouchEvent} event
 */
-function getEventPos(event){
-    if(event.type === "touchend"){
-        return {x: Math.round(event.changedTouches[0].clientX), y: Math.round(event.changedTouches[0].clientY)};
-    }else if(event.type.startsWith("touch")){
-        return {x: Math.round(event.touches[0].clientX), y: Math.round(event.touches[0].clientY)};
-    }else{
-        return {x: Math.round(event.offsetX), y: Math.round(event.offsetY)};
+function getEventPos(event) {
+    if (event.type === "touchend") {
+        return { x: Math.round(event.changedTouches[0].clientX), y: Math.round(event.changedTouches[0].clientY) };
+    } else if (event.type.startsWith("touch")) {
+        return { x: Math.round(event.touches[0].clientX), y: Math.round(event.touches[0].clientY) };
+    } else {
+        return { x: Math.round(event.offsetX), y: Math.round(event.offsetY) };
     }
 }
 
-function drawText(drawToDrawText){
+function drawText(drawToDrawText) {
     drawToDrawText.text(carac.children["text-input-div"].children["text"].value, lowestPosition.x, lowestPosition.y, { fontSize: carac.children["font-size-div"].children["font-size"].value, fontFamily: carac.children["font-family-div"].children["font-family"].value });
 }
 
@@ -770,7 +842,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
     const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
     const temporaryDraw = new Draw(alternateCtx.canvas);
     temporaryDraw.ctx.lineWidth = 1.5;
-    
+
     if (document.documentElement.classList.contains("dark-mode")) {
         temporaryDraw.ctx.strokeStyle = "white";
     } else {
@@ -783,22 +855,40 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
         case "circle":
             temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](temporaryDraw.canvas.width / 2, temporaryDraw.canvas.height / 2, 7.5, 0);
             break;
-        case "oval":
+        case "ellipse":
             temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](temporaryDraw.canvas.width / 2, temporaryDraw.canvas.height / 2, 16 / 3, 7);
+            break;
+        case "polygon":
+            temporaryDraw.circle(temporaryDraw.ctx.canvas.width / 2, temporaryDraw.ctx.canvas.height / 2, temporaryDraw.ctx.canvas.width / 2, 0);
+            temporaryDraw.rectangle(temporaryDraw.ctx.canvas.width / 6.4, temporaryDraw.ctx.canvas.height / 6.4, temporaryDraw.ctx.canvas.width / 1.455, temporaryDraw.ctx.canvas.height / 1.455);
             break;
         default:
             temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](0, 0, 16, 16);
             break;
     }
 
-    alternateCtx.canvas.parentElement.addEventListener("click", function () {
-        currentDrawingMode = "shape";
-        currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
-        document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
-        this.classList.add("active");
-        hideNewPathButton();
-        hideTextCaracteristics();
-    })
+    if(alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon"){
+        alternateCtx.canvas.parentElement.addEventListener("click", function () {
+            currentDrawingMode = "shape";
+            currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
+            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
+            this.classList.add("active");
+            hideNewPathButton();
+            hideTextCaracteristics();
+            showPolygonCaracteristics();
+        });
+    }else{
+        alternateCtx.canvas.parentElement.addEventListener("click", function () {
+            currentDrawingMode = "shape";
+            currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
+            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
+            this.classList.add("active");
+            hideNewPathButton();
+            hideTextCaracteristics();
+            hidePolygonCaracteristics();
+        });
+    }
+
 }
 
 for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) {
@@ -808,6 +898,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
             currentDrawingMode = this.getAttribute("data-type");
             hideTextCaracteristics();
             showNewPathButton();
+            hidePolygonCaracteristics();
             document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
             this.classList.add("active");
         })
@@ -826,6 +917,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
             currentDrawingMode = this.getAttribute("data-type");
             showTextCaracteristics();
             hideNewPathButton();
+            hidePolygonCaracteristics();
             document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
             this.classList.add("active");
         })
@@ -834,6 +926,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) 
             currentDrawingMode = document.querySelectorAll("button[data-type]")[i].getAttribute("data-type");
             hideTextCaracteristics();
             hideNewPathButton();
+            hidePolygonCaracteristics();
             document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
             this.classList.add("active");
         })
@@ -896,10 +989,10 @@ lineWidthInput.addEventListener("input", function () {
      * if odd and not translated: translate.
      * if even and translated: de-translate.
      * if even and not translated: do nothing.
-     */ 
-    if(parseInt(lineWidthInput.value) % 2 === 1 && !isPixelSharpnessTranslated){
+     */
+    if (parseInt(lineWidthInput.value) % 2 === 1 && !isPixelSharpnessTranslated) {
         ctx.translate(0.5, 0.5);
-    } else if(parseInt(lineWidthInput.value) % 2 === 0 && isPixelSharpnessTranslated){
+    } else if (parseInt(lineWidthInput.value) % 2 === 0 && isPixelSharpnessTranslated) {
         ctx.translate(-0.5, -0.5);
     }
 
@@ -967,12 +1060,12 @@ closeCanvasBtn.addEventListener('click', function () {
 });
 
 // background color change when scrolling for resizer wrraper
-drawingOptions.addEventListener("scroll", function(ev){
-    if(ev.target.scrollTop > 10){
+drawingOptions.addEventListener("scroll", function (ev) {
+    if (ev.target.scrollTop > 10) {
         resizer.parentElement.style.outline = "2px rgba(0, 0, 0, 0.4) solid";
         resizer.parentElement.style.backgroundColor = "rgb(38, 38, 48)";
-    }else{
+    } else {
         resizer.parentElement.style.outline = "none";
         resizer.parentElement.style.backgroundColor = "inherit";
     }
-}, {passive: true});
+}, { passive: true });
