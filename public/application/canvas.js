@@ -893,8 +893,23 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
     } else {
         temporaryDraw.ctx.strokeStyle = "black";
     }
-    
-    drawShape(alternateCtx.canvas.parentElement.getAttribute("data-shape"), temporaryDraw, { lowestPosition: { x: 0, y: 0 }, highestPosition: { x: 16, y: 16 } });
+
+    if(alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon"){
+        alternateCtx.moveTo(0, 0);
+        alternateCtx.lineTo(alternateCtx.canvas.width, 0);
+        alternateCtx.lineTo(alternateCtx.canvas.width, alternateCtx.canvas.height);
+        alternateCtx.lineTo(0, alternateCtx.canvas.height);
+        alternateCtx.lineTo(0, 0);
+
+        alternateCtx.rect(0, 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+        alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+        alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+        alternateCtx.rect(0, alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+
+        alternateCtx.stroke();
+    }else{
+        drawShape(alternateCtx.canvas.parentElement.getAttribute("data-shape"), temporaryDraw, { lowestPosition: { x: 0, y: 0 }, highestPosition: { x: 16, y: 16 } });
+    }
 
     if (alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon") {
         alternateCtx.canvas.parentElement.addEventListener("click", function () {
