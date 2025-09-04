@@ -425,23 +425,23 @@ class Draw {
         // the angle to rotate to draw the line to the next vertex
         const STEP = 360 / sides;
 
-        ctx.save();
-        ctx.translate(x + (w / 2), y + (h / 2));
+        this.ctx.save();
+        this.ctx.translate(x + (w / 2), y + (h / 2));
 
         // to make polygons with a even amount of sides not look 90-degrees rotated
         if (sides % 2 === 0) {
-            ctx.rotate(toRad(STEP / 2));
+            this.ctx.rotate(toRad(STEP / 2));
         }
 
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - (h / 2));
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 0 - (h / 2));
         for (let i = 0; i < sides + 1; i++) {
-            ctx.lineTo(0, 0 - (h / 2));
-            ctx.stroke();
+            this.ctx.lineTo(0, 0 - (h / 2));
+            this.ctx.stroke();
 
-            ctx.rotate(toRad(STEP));
+            this.ctx.rotate(toRad(STEP));
         }
-        ctx.restore();
+        this.ctx.restore();
     }
 
     text(text, x, y, options = {}) {
@@ -674,7 +674,7 @@ function hideNewPathButton() {
 }
 
 function showPolygonCaracteristics() {
-    if(document.querySelectorAll("[data-polygon-caracteristic]").length){
+    if (document.querySelectorAll("[data-polygon-caracteristic]").length) {
         return;
     }
 
@@ -733,19 +733,41 @@ canvas.addEventListener("click", function (ev) {
 });
 
 function handleMouseOrTouchMove(event) {
-    if (isDrawing && currentDrawingMode === "free") {
-        draw.strokeLineTo(getEventPos(event).x, getEventPos(event).y);
-    } else {
-        if (isDrawing && currentDrawingMode !== "line") {
+    if (!isDrawing) {
+        return;
+    }
+
+    switch (currentDrawingMode) {
+        case "free":
+            draw.strokeLineTo(getEventPos(event).x, getEventPos(event).y);
+            break;
+        case "text":
+            previewDraw.ctx.font = draw.ctx.font;
+
             previewDraw.clear();
             previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
-        }
-
-        if (isDrawing && currentDrawingMode === "text") {
-            previewDraw.ctx.font = draw.ctx.font;
             drawText(previewDraw);
-        }
-
+            break;
+        case "shape":
+            previewDraw.clear();
+            previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
+            if (currentShapeToDraw === "polygon") {
+                drawShape(
+                    currentShapeToDraw,
+                    previewDraw,
+                    { lowestPosition: lowestPosition, highestPosition: getEventPos(event) },
+                    parseInt(document.querySelector("#polygon-sides-input").value)
+                );
+            } else {
+                drawShape(
+                    currentShapeToDraw,
+                    previewDraw,
+                    { lowestPosition: lowestPosition, highestPosition: getEventPos(event) }
+                );
+            }
+        case "line":
+        default:
+            break; // do nothing
     }
 }
 
@@ -777,31 +799,7 @@ function handleMouseUpOrTouchEnd(event) {
     highestPosition = getEventPos(event);
 
     if (currentDrawingMode === "shape") {
-        switch (currentShapeToDraw) {
-            case "equilateralTriangle":
-                if ((highestPosition.x - lowestPosition.x) < 0 && (highestPosition.y - lowestPosition.y) < 0) {
-                    draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.max(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
-                } else if ((highestPosition.x - lowestPosition.x) < 0 || (highestPosition.y - lowestPosition.y) < 0) {
-                    let size = Math.min(Math.abs(highestPosition.x - lowestPosition.x), Math.abs(highestPosition.y - lowestPosition.y));
-                    draw["equilateralTriangle"](Math.min(highestPosition.x, lowestPosition.x), Math.min(highestPosition.y, lowestPosition.y), size);
-                } else {
-                    draw["equilateralTriangle"](lowestPosition.x, lowestPosition.y, Math.min(highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y));
-                }
-                break;
-            case "circle":
-                draw["circle"](lowestPosition.x + (highestPosition.x - lowestPosition.x) / 2, lowestPosition.y + (highestPosition.y - lowestPosition.y) / 2, Math.min(Math.abs((highestPosition.x - lowestPosition.x) / 2), Math.abs((highestPosition.y - lowestPosition.y) / 2)), 0);
-                break;
-            case "oval":
-                draw["oval"](lowestPosition.x + (highestPosition.x - lowestPosition.x) / 2, lowestPosition.y + (highestPosition.y - lowestPosition.y) / 2, (highestPosition.x - lowestPosition.x) / 2, (highestPosition.y - lowestPosition.y) / 2);
-                break;
-            case "polygon":
-                const sides = parseInt(document.querySelector("#polygon-sides-input").value);
-                draw["polygon"](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y, sides);
-                break;
-            default:
-                draw[currentShapeToDraw](lowestPosition.x, lowestPosition.y, highestPosition.x - lowestPosition.x, highestPosition.y - lowestPosition.y);
-                break;
-        }
+        drawShape(currentShapeToDraw, draw, { lowestPosition: lowestPosition, highestPosition: highestPosition });
 
         drawingPreview.style.display = "none";
         previewDraw.clear();
@@ -838,6 +836,53 @@ function drawText(drawToDrawText) {
     drawToDrawText.text(carac.children["text-input-div"].children["text"].value, lowestPosition.x, lowestPosition.y, { fontSize: carac.children["font-size-div"].children["font-size"].value, fontFamily: carac.children["font-family-div"].children["font-family"].value });
 }
 
+/**
+ * 
+ * @param {String} shape Name of the shape to draw
+ * @param {Draw} targetDraw The Draw to draw to
+ * @param {{
+ *      lowestPosition: {
+ *          x: number,
+ *          y: number
+ *      },
+ *      highestPosition: {
+ *          x: number,
+ *          y: number
+ *      }
+ * }} pos The position to draw in. If it is determined by user input, `lowestPosition` must be the point where the user
+ *        started clicking and `highestPosition` the point where the user finished clicking.
+ * @param {{}} [values={}] Extra values that would be needed for drawing especific shapes, like the amount of
+ *                         sides to draw a polygon
+ */
+function drawShape(shape, targetDraw, pos, values = {}) {
+    switch (shape) {
+        case "equilateralTriangle":
+            // if ((pos.highestPosition.x - pos.lowestPosition.x) < 0 && (pos.highestPosition.y - pos.lowestPosition.y) < 0) {
+            // targetDraw["equilateralTriangle"](pos.lowestPosition.x, pos.lowestPosition.y, Math.max(pos.highestPosition.x - pos.lowestPosition.x, pos.highestPosition.y - pos.lowestPosition.y));
+            // } else if ((pos.highestPosition.x - pos.lowestPosition.x) < 0 || (pos.highestPosition.y - pos.lowestPosition.y) < 0) {
+            // let size = Math.min(Math.abs(pos.highestPosition.x - pos.lowestPosition.x), Math.abs(pos.highestPosition.y - pos.lowestPosition.y));
+            // targetDraw["equilateralTriangle"](Math.min(pos.highestPosition.x, pos.lowestPosition.x), Math.min(pos.highestPosition.y, pos.lowestPosition.y), size);
+            // } else {
+            // targetDraw["equilateralTriangle"](pos.lowestPosition.x, pos.lowestPosition.y, Math.min(pos.highestPosition.x - pos.lowestPosition.x, pos.highestPosition.y - pos.lowestPosition.y));
+            // }
+            let size = Math.min(Math.abs(pos.highestPosition.x - pos.lowestPosition.x), Math.abs(pos.highestPosition.y - pos.lowestPosition.y));
+            targetDraw["equilateralTriangle"](Math.min(pos.highestPosition.x, pos.lowestPosition.x), Math.min(pos.highestPosition.y, pos.lowestPosition.y), size);
+            break;
+        case "circle":
+            targetDraw["circle"](pos.lowestPosition.x + (pos.highestPosition.x - pos.lowestPosition.x) / 2, pos.lowestPosition.y + (pos.highestPosition.y - pos.lowestPosition.y) / 2, Math.min(Math.abs((pos.highestPosition.x - pos.lowestPosition.x) / 2), Math.abs((pos.highestPosition.y - pos.lowestPosition.y) / 2)), 0);
+            break;
+        case "ellipse":
+            targetDraw["ellipse"](pos.lowestPosition.x + (pos.highestPosition.x - pos.lowestPosition.x) / 2, pos.lowestPosition.y + (pos.highestPosition.y - pos.lowestPosition.y) / 2, (pos.highestPosition.x - pos.lowestPosition.x) / 2, (pos.highestPosition.y - pos.lowestPosition.y) / 2);
+            break;
+        case "polygon":
+            targetDraw["polygon"](pos.lowestPosition.x, pos.lowestPosition.y, pos.highestPosition.x - pos.lowestPosition.x, pos.highestPosition.y - pos.lowestPosition.y, values.sides ?? 7);
+            break;
+        default:
+            targetDraw[shape](pos.lowestPosition.x, pos.lowestPosition.y, pos.highestPosition.x - pos.lowestPosition.x, pos.highestPosition.y - pos.lowestPosition.y);
+            break;
+    }
+}
+
 for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++) {
     const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
     const temporaryDraw = new Draw(alternateCtx.canvas);
@@ -848,26 +893,10 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
     } else {
         temporaryDraw.ctx.strokeStyle = "black";
     }
-    switch (temporaryDraw.canvas.parentElement.getAttribute("data-shape")) {
-        case "equilateralTriangle":
-            temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](0, 0, 16);
-            break;
-        case "circle":
-            temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](temporaryDraw.canvas.width / 2, temporaryDraw.canvas.height / 2, 7.5, 0);
-            break;
-        case "ellipse":
-            temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](temporaryDraw.canvas.width / 2, temporaryDraw.canvas.height / 2, 16 / 3, 7);
-            break;
-        case "polygon":
-            temporaryDraw.circle(temporaryDraw.ctx.canvas.width / 2, temporaryDraw.ctx.canvas.height / 2, temporaryDraw.ctx.canvas.width / 2, 0);
-            temporaryDraw.rectangle(temporaryDraw.ctx.canvas.width / 6.4, temporaryDraw.ctx.canvas.height / 6.4, temporaryDraw.ctx.canvas.width / 1.455, temporaryDraw.ctx.canvas.height / 1.455);
-            break;
-        default:
-            temporaryDraw[temporaryDraw.canvas.parentElement.getAttribute("data-shape")](0, 0, 16, 16);
-            break;
-    }
+    
+    drawShape(alternateCtx.canvas.parentElement.getAttribute("data-shape"), temporaryDraw, { lowestPosition: { x: 0, y: 0 }, highestPosition: { x: 16, y: 16 } });
 
-    if(alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon"){
+    if (alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon") {
         alternateCtx.canvas.parentElement.addEventListener("click", function () {
             currentDrawingMode = "shape";
             currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
@@ -877,7 +906,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
             hideTextCaracteristics();
             showPolygonCaracteristics();
         });
-    }else{
+    } else {
         alternateCtx.canvas.parentElement.addEventListener("click", function () {
             currentDrawingMode = "shape";
             currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
