@@ -422,26 +422,28 @@ class Draw {
             return deg / 180 * Math.PI;
         }
 
-        // the angle to rotate to draw the line to the next vertex
         const STEP = 360 / sides;
-
-        this.ctx.save();
-        this.ctx.translate(x + (w / 2), y + (h / 2));
-
-        // to make polygons with a even amount of sides not look 90-degrees rotated
-        if (sides % 2 === 0) {
-            this.ctx.rotate(toRad(STEP / 2));
-        }
-
         this.ctx.beginPath();
-        this.ctx.moveTo(0, 0 - (h / 2));
-        for (let i = 0; i < sides + 1; i++) {
-            this.ctx.lineTo(0, 0 - (h / 2));
-            this.ctx.stroke();
 
-            this.ctx.rotate(toRad(STEP));
+        for (let i = 0; i < sides + 1; i++) {
+            // h and w will be the (y and x) radius of the circle (ellipse), what means that
+            // the (x and y) diameter of the circle will be h*2 and w*2 (respectively), then,
+            // we divide it by 2. For example, h, is the height of the polygon, so the diameter
+            // would be twice the size we want and because of that we only multiply by half h.
+            let ray = { dirX: 0, dirY: 0 };
+            if (sides % 2 === 1) {
+                ray.dirY = Math.sin(toRad(i * STEP + (STEP / 4))) * h / 2;
+                ray.dirX = Math.cos(toRad(i * STEP + (STEP / 4))) * w / 2;
+            } else {
+                ray.dirY = Math.sin(toRad(i * STEP)) * h / 2;
+                ray.dirX = Math.cos(toRad(i * STEP)) * w / 2;
+            }
+
+            // offset the x and y to be at the middle of the box the polygon should be.
+            this.ctx.lineTo(ray.dirX + x + (w / 2), ray.dirY + y + (h / 2));
         }
-        this.ctx.restore();
+
+        this.ctx.stroke();
     }
 
     text(text, x, y, options = {}) {
@@ -756,7 +758,7 @@ function handleMouseOrTouchMove(event) {
                     currentShapeToDraw,
                     previewDraw,
                     { lowestPosition: lowestPosition, highestPosition: getEventPos(event) },
-                    parseInt(document.querySelector("#polygon-sides-input").value)
+                    { sides: parseInt(document.querySelector("#polygon-sides-input").value) }
                 );
             } else {
                 drawShape(
@@ -799,7 +801,7 @@ function handleMouseUpOrTouchEnd(event) {
     highestPosition = getEventPos(event);
 
     if (currentDrawingMode === "shape") {
-        drawShape(currentShapeToDraw, draw, { lowestPosition: lowestPosition, highestPosition: highestPosition });
+        drawShape(currentShapeToDraw, draw, { lowestPosition: lowestPosition, highestPosition: highestPosition }, currentShapeToDraw === "polygon" ? { sides: parseInt(document.querySelector("#polygon-sides-input").value) } : undefined);
 
         drawingPreview.style.display = "none";
         previewDraw.clear();
@@ -875,7 +877,7 @@ function drawShape(shape, targetDraw, pos, values = {}) {
             targetDraw["ellipse"](pos.lowestPosition.x + (pos.highestPosition.x - pos.lowestPosition.x) / 2, pos.lowestPosition.y + (pos.highestPosition.y - pos.lowestPosition.y) / 2, (pos.highestPosition.x - pos.lowestPosition.x) / 2, (pos.highestPosition.y - pos.lowestPosition.y) / 2);
             break;
         case "polygon":
-            targetDraw["polygon"](pos.lowestPosition.x, pos.lowestPosition.y, pos.highestPosition.x - pos.lowestPosition.x, pos.highestPosition.y - pos.lowestPosition.y, values.sides ?? 7);
+            targetDraw["polygon"](pos.lowestPosition.x, pos.lowestPosition.y, pos.highestPosition.x - pos.lowestPosition.x, pos.highestPosition.y - pos.lowestPosition.y, values.sides);
             break;
         default:
             targetDraw[shape](pos.lowestPosition.x, pos.lowestPosition.y, pos.highestPosition.x - pos.lowestPosition.x, pos.highestPosition.y - pos.lowestPosition.y);
@@ -894,7 +896,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
         temporaryDraw.ctx.strokeStyle = "black";
     }
 
-    if(alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon"){
+    if (alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon") {
         alternateCtx.moveTo(0, 0);
         alternateCtx.lineTo(alternateCtx.canvas.width, 0);
         alternateCtx.lineTo(alternateCtx.canvas.width, alternateCtx.canvas.height);
@@ -907,7 +909,7 @@ for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++)
         alternateCtx.rect(0, alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
 
         alternateCtx.stroke();
-    }else{
+    } else {
         drawShape(alternateCtx.canvas.parentElement.getAttribute("data-shape"), temporaryDraw, { lowestPosition: { x: 0, y: 0 }, highestPosition: { x: 16, y: 16 } });
     }
 
