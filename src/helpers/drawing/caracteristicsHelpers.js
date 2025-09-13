@@ -1,4 +1,5 @@
 import { carac, fontsDatalist, drawingColorInput} from "./../../application/drawing/UIElements.js";
+import { canvasDrawer as drawer } from "./../../application/drawing/locals.js";
 
 function caracteristicsChildren() {
     return Array.from(carac.children);

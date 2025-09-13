@@ -65,7 +65,7 @@ ctx.lineJoin = "round";
 // canvas.
 let isPixelSharpnessTranslated = false;
 
-const drawer = new Drawer(canvas);
+const canvasDrawer = new Drawer(canvas);
 
 const sharedWorker = new SharedWorkerPolyfill("./../../services/sharedWorker.js");
 
@@ -79,7 +79,7 @@ sharedWorker.port.onmessage = function (ev) {
             img.src = URL.createObjectURL(msg.img);
             img.onload = function () {
                 URL.revokeObjectURL(img.src);
-                drawer.ctx.drawImage(img, 0, 0);
+                canvasDrawer.ctx.drawImage(img, 0, 0);
             }
         } else {
             alert(msg.errorMsg);
@@ -94,9 +94,9 @@ sharedWorker.port.onmessage = function (ev) {
 }
 
 function init() {
-    drawer.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
-    drawer.ctx.strokeStyle = carac.children["drawing-line-color"].value;
-    drawer.ctx.fillStyle = carac.children["drawing-line-color"].value;
+    canvasDrawer.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
+    canvasDrawer.ctx.strokeStyle = carac.children["drawing-line-color"].value;
+    canvasDrawer.ctx.fillStyle = carac.children["drawing-line-color"].value;
     drawShapeButtonShapes();
     appendEventListenerToShapeButtons();
     drawDrawingTypeButtonsImage();
@@ -132,8 +132,8 @@ canvas.addEventListener("touchcancel", function (ev) {
 
 canvas.addEventListener("click", function (ev) {
     if (currentDrawingMode === "line") {
-        drawer.lineTo(Math.round(ev.offsetX), Math.round(ev.offsetY));
-        drawer.ctx.stroke();
+        canvasDrawer.lineTo(Math.round(ev.offsetX), Math.round(ev.offsetY));
+        canvasDrawer.ctx.stroke();
     }
 });
 
@@ -144,10 +144,10 @@ function handleMouseOrTouchMove(event) {
 
     switch (currentDrawingMode) {
         case "free":
-            drawer.strokeLineTo(getEventPos(event).x, getEventPos(event).y);
+            canvasDrawer.strokeLineTo(getEventPos(event).x, getEventPos(event).y);
             break;
         case "text":
-            previewDrawer.ctx.font = drawer.ctx.font;
+            previewDrawer.ctx.font = canvasDrawer.ctx.font;
 
             previewDrawer.clear();
             previewDrawer.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
@@ -190,8 +190,8 @@ function handleMouseDownOrTouchStart(event) {
 
     console.log(event);
     if (currentDrawingMode !== "line") {
-        drawer.moveTo(getEventPos(event).x, getEventPos(event).y);
-        drawer.ctx.beginPath();
+        canvasDrawer.moveTo(getEventPos(event).x, getEventPos(event).y);
+        canvasDrawer.ctx.beginPath();
     }
 
     lowestPosition = getEventPos(event);
@@ -204,7 +204,7 @@ function handleMouseUpOrTouchEnd(event) {
     highestPosition = getEventPos(event);
 
     if (currentDrawingMode === "shape") {
-        drawShape(currentShapeToDraw, drawer, { lowestPosition: lowestPosition, highestPosition: highestPosition }, currentShapeToDraw === "polygon" ? { sides: parseInt(document.querySelector("#polygon-sides-input").value) } : undefined);
+        drawShape(currentShapeToDraw, canvasDrawer, { lowestPosition: lowestPosition, highestPosition: highestPosition }, currentShapeToDraw === "polygon" ? { sides: parseInt(document.querySelector("#polygon-sides-input").value) } : undefined);
 
         drawingPreview.style.display = "none";
         previewDrawer.clear();
@@ -218,7 +218,7 @@ function handleMouseUpOrTouchEnd(event) {
         drawingPreview.style.display = "none";
         previewDrawer.clear();
 
-        drawText(drawer);
+        drawText(canvasDrawer);
     }
 
     isDrawing = false;
@@ -359,7 +359,7 @@ function appendEventListenerToDrawingTypeButtons(){
     for(let i = 0, dataTypeBtns = document.querySelectorAll("button[data-type]"); i < dataTypeBtns.length; i++){
         if (dataTypeBtns[i].getAttribute("data-type") === "line") {
             dataTypeBtns[i].addEventListener("click", function () {
-                drawer.ctx.beginPath();
+                canvasDrawer.ctx.beginPath();
                 currentDrawingMode = this.getAttribute("data-type");
                 hideTextCaracteristics();
                 showNewPathButton();
@@ -474,12 +474,12 @@ lineWidthInput.addEventListener("input", function () {
     }
 
     ctx.lineWidth = lineWidthInput.value;
-    drawer.ctx.lineWidth = lineWidthInput.value;
+    canvasDrawer.ctx.lineWidth = lineWidthInput.value;
 })
 
 drawingColorInput.addEventListener("input", function () {
     ctx.strokeStyle = drawingColorInput.value;
-    drawer.ctx.strokeStyle = drawingColorInput.value;
+    canvasDrawer.ctx.strokeStyle = drawingColorInput.value;
 })
 
 resizer.addEventListener("click", function () {
