@@ -20,32 +20,40 @@ canvas.onmouseup = () => {
 */
 
 import SharedWorkerPolyfill from "./../../lib/polyfill/SharedWorkerPolyfill.js";
-import toArray from "./../../utils/toArray.js";
 import Drawer from "./Drawer.js";
+import {
+    showNewPathButton,
+    hideNewPathButton,
+    showTextCaracteristics,
+    hideTextCaracteristics,
+    showPolygonCaracteristics,
+    hidePolygonCaracteristics
+} from "./../../helpers/drawing/caracteristicsHelpers.js";
+import { 
+    canvas,
+    drawingPreview,
+    carac,
+    lineWidthInput,
+    drawingColorInput,
+    drawingOptions,
+    resizer,
+    closeCanvasBtn
+} from "./UIElements.js";
 
-const canvas = document.querySelector("#main-canvas");
 canvas.height = window.innerHeight;
 canvas.width = window.innerWidth;
 const ctx = canvas.getContext("2d");
 
-const drawingPreview = document.querySelector("#drawing-preview");
 drawingPreview.height = canvas.height;
 drawingPreview.width = canvas.width;
-const previewDraw = new Drawer(drawingPreview);
+const previewDrawer = new Drawer(drawingPreview);
 
-const lineWidthInput = document.querySelector("input#drawing-line-width");
-const drawingColorInput = document.querySelector("input#drawing-line-color");
-const resizer = document.querySelector("#resizer");
-const drawingOptions = document.querySelector("#drawing-options");
-const carac = document.querySelector("#caracteristics");
-const closeCanvasBtn = document.querySelector("#return");
 // if the user is drawing, not if the drawing is a drawing.
 let isDrawing = false;
 let lowestPosition = { x: 9999, y: 9999 };
 let highestPosition = { x: 0, y: 0 };
 let currentDrawingMode = "shape";
 let currentShapeToDraw = "rectangle";
-const fontsDatalist = document.querySelector("datalist");
 
 ctx.lineWidth = 2;
 ctx.lineCap = "round";
@@ -89,179 +97,15 @@ function init() {
     drawer.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
     drawer.ctx.strokeStyle = carac.children["drawing-line-color"].value;
     drawer.ctx.fillStyle = carac.children["drawing-line-color"].value;
+    drawShapeButtonShapes();
+    appendEventListenerToShapeButtons();
+    drawDrawingTypeButtonsImage();
+    appendEventListenerToDrawingTypeButtons();
 }
 init();
 
 HTMLElement.prototype.resetStyle = function () {
     this.style = "";
-}
-
-function caracteristicsChildren() {
-    return toArray(carac.children);
-}
-
-function showTextCaracteristics() {
-    if (!caracteristicsChildren().filter((el) => { return el.getAttribute("data-text-caracteristic"); }).length) {
-        const fontSizeLabel = document.createElement("label");
-        fontSizeLabel.textContent = "Tamanho da fonte: ";
-        fontSizeLabel.setAttribute("for", "font-size");
-
-        const fontSizeInput = document.createElement("input");
-        fontSizeInput.type = "number";
-        fontSizeInput.id = "font-size";
-        fontSizeInput.min = "2";
-
-        const fontSizeWrraper = document.createElement("div");
-        fontSizeWrraper.id = "font-size-div";
-        fontSizeWrraper.appendChild(fontSizeLabel);
-        fontSizeWrraper.appendChild(fontSizeInput);
-
-
-        const fontFamilyLabel = document.createElement("label");
-        fontFamilyLabel.textContent = "Família da fonte: ";
-        fontFamilyLabel.setAttribute("for", "font-family");
-
-        const fontFamilyInput = document.createElement("input");
-        fontFamilyInput.id = "font-family";
-        fontFamilyInput.setAttribute("list", "availableFonts");
-
-        const fontFamilyWrraper = document.createElement("div");
-        fontFamilyWrraper.id = "font-family-div";
-        fontFamilyWrraper.appendChild(fontFamilyLabel);
-        fontFamilyWrraper.appendChild(fontFamilyInput);
-
-
-        const textInputLabel = document.createElement("label");
-        textInputLabel.setAttribute("for", "text");
-        textInputLabel.textContent = "Texto: ";
-
-        const textInput = document.createElement("input");
-        textInput.id = "text";
-
-        const textInputWrraper = document.createElement("div");
-        textInputWrraper.id = "text-input-div";
-        textInputWrraper.appendChild(textInputLabel);
-        textInputWrraper.appendChild(textInput);
-
-
-        fontSizeInput.oninput = function () { drawer.ctx.font = `bold ${this.value}px ${fontFamilyInput.value}`; }
-        fontFamilyInput.oninput = function () { drawer.ctx.font = `bold ${fontSizeInput.value}px ${this.value}`; }
-        drawingColorInput.oninput = function () { drawer.ctx.fillStyle = this.value; }
-
-        if (fontsDatalist.children.length === 0) {
-            (async function () {
-                let availableFonts;
-
-                if ("queryLocalFonts" in window) {
-                    availableFonts = await window.queryLocalFonts();
-                } else {
-                    availableFonts = ["sans-serif", "serif", "monospace"];
-                }
-
-                for (let i = 0; i < availableFonts.length; i++) {
-                    const option = document.createElement("option");
-                    option.textContent = availableFonts[i].fullName || availableFonts[i];
-                    option.value = availableFonts[i].fullName || availableFonts[i];
-
-                    if (availableFonts[i]?.style.split(" ").length > 1) {
-                        option.style.fontStyle = availableFonts[i].style.split(" ")[1];
-                        option.style.fontWeight = availableFonts[i].style.split(" ")[0];
-                    } else if (availableFonts[i]?.style === "Italic") {
-                        option.style.fontStyle = availableFonts[i].style;
-                    } else {
-                        option.style.fontWeight = availableFonts[i]?.style;
-                    }
-                    fontsDatalist.appendChild(option);
-                }
-
-            })();
-        }
-
-        carac.querySelector("br").remove();
-        carac.querySelector("label[for=drawing-line-width").remove();
-        carac.querySelector("input#drawing-line-width").remove();
-
-        //fontSizeLabel.setAttribute("data-text-caracteristic", "true");
-        //fontSizeInput.setAttribute("data-text-caracteristic", "true");
-        //fontFamilyLabel.setAttribute("data-text-caracteristic", "true");
-        //fontFamilyInput.setAttribute("data-text-caracteristic", "true");
-        //textInputLabel.setAttribute("data-text-caracteristic", "true");
-        //textInput.setAttribute("data-text-caracteristic", "true");
-
-
-        fontSizeWrraper.setAttribute("data-text-caracteristic", "true");
-        fontFamilyWrraper.setAttribute("data-text-caracteristic", "true");
-        textInputWrraper.setAttribute("data-text-caracteristic", "true");
-
-
-        carac.appendChild(fontSizeWrraper);
-        carac.appendChild(fontFamilyWrraper);
-        carac.appendChild(textInputWrraper);
-    }
-}
-
-function hideTextCaracteristics() {
-    const textCaracteristics = caracteristicsChildren().filter((el) => { return el.getAttribute("data-text-caracteristic") });
-    if (textCaracteristics.length) {
-        for (let i = 0; i < textCaracteristics.length; i++) {
-            textCaracteristics[i].remove();
-        }
-        const label = document.createElement("label");
-        label.setAttribute("for", "drawing-line-width");
-        label.textContent = "Espessura: ";
-
-        carac.appendChild(document.createElement("br"));
-        carac.appendChild(label);
-        carac.appendChild(lineWidthInput);
-    }
-}
-
-function showNewPathButton() {
-    if (!(caracteristicsChildren().filter((el) => { return el.textContent === "Iniciar novo traço" }).length)) {
-        const button = document.createElement("button");
-        button.style.display = "block";
-        button.textContent = "Iniciar novo traço";
-        button.addEventListener("click", function () { drawer.ctx.beginPath() });
-
-        carac.appendChild(button);
-    }
-}
-
-function hideNewPathButton() {
-    const newPathElements = caracteristicsChildren().filter((el) => { return el.textContent === "Iniciar novo traço" });
-    if (newPathElements.length) {
-        newPathElements[0].remove();
-    }
-}
-
-function showPolygonCaracteristics() {
-    if (document.querySelectorAll("[data-polygon-caracteristic]").length) {
-        return;
-    }
-
-    const wrraper = document.createElement("div");
-    wrraper.id = "polygon-sides-div";
-    wrraper.setAttribute("data-polygon-caracteristic", "true");
-
-    const sidesInputLabel = document.createElement("label");
-    sidesInputLabel.setAttribute("for", "polygon-sides-input");
-    sidesInputLabel.id = "polygon-sides-label";
-    sidesInputLabel.textContent = "Número de lados:";
-
-    const sidesInput = document.createElement("input");
-    sidesInput.id = "polygon-sides-input";
-    sidesInput.type = "number";
-    sidesInput.min = "2";
-    sidesInput.value = "7";
-
-    wrraper.appendChild(sidesInputLabel);
-    wrraper.appendChild(sidesInput);
-
-    carac.appendChild(wrraper);
-};
-
-function hidePolygonCaracteristics() {
-    document.querySelectorAll("[data-polygon-caracteristic]").forEach((element) => { element.remove(); });
 }
 
 
@@ -303,26 +147,26 @@ function handleMouseOrTouchMove(event) {
             drawer.strokeLineTo(getEventPos(event).x, getEventPos(event).y);
             break;
         case "text":
-            previewDraw.ctx.font = drawer.ctx.font;
+            previewDrawer.ctx.font = drawer.ctx.font;
 
-            previewDraw.clear();
-            previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
-            drawText(previewDraw);
+            previewDrawer.clear();
+            previewDrawer.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
+            drawText(previewDrawer);
             break;
         case "shape":
-            previewDraw.clear();
-            previewDraw.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
+            previewDrawer.clear();
+            previewDrawer.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
             if (currentShapeToDraw === "polygon") {
                 drawShape(
                     currentShapeToDraw,
-                    previewDraw,
+                    previewDrawer,
                     { lowestPosition: lowestPosition, highestPosition: getEventPos(event) },
                     { sides: parseInt(document.querySelector("#polygon-sides-input").value) }
                 );
             } else {
                 drawShape(
                     currentShapeToDraw,
-                    previewDraw,
+                    previewDrawer,
                     { lowestPosition: lowestPosition, highestPosition: getEventPos(event) }
                 );
             }
@@ -363,7 +207,7 @@ function handleMouseUpOrTouchEnd(event) {
         drawShape(currentShapeToDraw, drawer, { lowestPosition: lowestPosition, highestPosition: highestPosition }, currentShapeToDraw === "polygon" ? { sides: parseInt(document.querySelector("#polygon-sides-input").value) } : undefined);
 
         drawingPreview.style.display = "none";
-        previewDraw.clear();
+        previewDrawer.clear();
     }
 
     if (currentDrawingMode !== "line") {
@@ -372,7 +216,7 @@ function handleMouseUpOrTouchEnd(event) {
 
     if (currentDrawingMode === "text") {
         drawingPreview.style.display = "none";
-        previewDraw.clear();
+        previewDrawer.clear();
 
         drawText(drawer);
     }
@@ -393,8 +237,8 @@ function getEventPos(event) {
     }
 }
 
-function drawText(drawToDrawText) {
-    drawToDrawText.text(carac.children["text-input-div"].children["text"].value, lowestPosition.x, lowestPosition.y, { fontSize: carac.children["font-size-div"].children["font-size"].value, fontFamily: carac.children["font-family-div"].children["font-family"].value });
+function drawText(targetDrawer) {
+    targetDrawer.text(carac.children["text-input-div"].children["text"].value, lowestPosition.x, lowestPosition.y, { fontSize: carac.children["font-size-div"].children["font-size"].value, fontFamily: carac.children["font-family-div"].children["font-family"].value });
 }
 
 /**
@@ -444,150 +288,176 @@ function drawShape(shape, targetDraw, pos, values = {}) {
     }
 }
 
-for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++) {
-    const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
-    const temporaryDrawer = new Drawer(alternateCtx.canvas);
-    temporaryDrawer.ctx.lineWidth = 1.5;
-
-    if (document.documentElement.classList.contains("dark-mode")) {
-        temporaryDrawer.ctx.strokeStyle = "white";
-    } else {
-        temporaryDrawer.ctx.strokeStyle = "black";
-    }
-
-    if (alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon") {
-        alternateCtx.moveTo(0, 0);
-        alternateCtx.lineTo(alternateCtx.canvas.width, 0);
-        alternateCtx.lineTo(alternateCtx.canvas.width, alternateCtx.canvas.height);
-        alternateCtx.lineTo(0, alternateCtx.canvas.height);
-        alternateCtx.lineTo(0, 0);
-
-        alternateCtx.rect(0, 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
-        alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
-        alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
-        alternateCtx.rect(0, alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
-
-        alternateCtx.stroke();
-    } else {
-        drawShape(alternateCtx.canvas.parentElement.getAttribute("data-shape"), temporaryDrawer, { lowestPosition: { x: 0, y: 0 }, highestPosition: { x: 16, y: 16 } });
-    }
-
-    if (alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon") {
-        alternateCtx.canvas.parentElement.addEventListener("click", function () {
-            currentDrawingMode = "shape";
-            currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
-            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
-            this.classList.add("active");
-            hideNewPathButton();
-            hideTextCaracteristics();
-            showPolygonCaracteristics();
-        });
-    } else {
-        alternateCtx.canvas.parentElement.addEventListener("click", function () {
-            currentDrawingMode = "shape";
-            currentShapeToDraw = alternateCtx.canvas.parentElement.getAttribute("data-shape");
-            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
-            this.classList.add("active");
-            hideNewPathButton();
-            hideTextCaracteristics();
-            hidePolygonCaracteristics();
-        });
-    }
-
-}
-
-for (let i = 0; i < document.querySelectorAll("button[data-type]").length; i++) {
-    if (document.querySelectorAll("button[data-type]")[i].getAttribute("data-type") === "line") {
-        document.querySelectorAll("button[data-type]")[i].addEventListener("click", function () {
-            drawer.ctx.beginPath();
-            currentDrawingMode = this.getAttribute("data-type");
-            hideTextCaracteristics();
-            showNewPathButton();
-            hidePolygonCaracteristics();
-            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
-            this.classList.add("active");
-        })
-    } else if (document.querySelectorAll("button[data-type]")[i].getAttribute("data-type") === "clear") {
-        document.querySelectorAll("button[data-type]")[i].addEventListener("click", function () {
-            if (ctx.globalCompositeOperation === "source-over") {
-                ctx.globalCompositeOperation = "destination-out";
-                this.style.backgroundColor = "orange";
-            } else {
-                ctx.globalCompositeOperation = "source-over";
-                this.style.backgroundColor = "";
-            }
-        })
-    } else if (document.querySelectorAll("button[data-type]")[i].getAttribute("data-type") === "text") {
-        document.querySelectorAll("button[data-type]")[i].addEventListener("click", function () {
-            currentDrawingMode = this.getAttribute("data-type");
-            showTextCaracteristics();
-            hideNewPathButton();
-            hidePolygonCaracteristics();
-            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
-            this.classList.add("active");
-        })
-    } else {
-        document.querySelectorAll("button[data-type]")[i].addEventListener("click", function () {
-            currentDrawingMode = document.querySelectorAll("button[data-type]")[i].getAttribute("data-type");
-            hideTextCaracteristics();
-            hideNewPathButton();
-            hidePolygonCaracteristics();
-            document.querySelectorAll("button").forEach((btn) => { btn.classList.remove("active") });
-            this.classList.add("active");
-        })
-    }
-
-    const temporaryCtx = document.querySelectorAll("button[data-type]")[i].children[0].getContext("2d");
-    if (document.documentElement.classList.contains("dark-mode")) {
-        temporaryCtx.strokeStyle = "white";
-    }
-    if (temporaryCtx.canvas.parentElement.getAttribute("data-type") === "free") {
-        temporaryCtx.lineWidth = 24;
-        temporaryCtx.lineCap = "round";
-        temporaryCtx.lineJoin = "round";
-        temporaryCtx.moveTo(temporaryCtx.canvas.width / 19, temporaryCtx.canvas.height / 3 * 2);
-        temporaryCtx.lineTo(temporaryCtx.canvas.width / 4, temporaryCtx.canvas.height / 3);
-        temporaryCtx.lineTo(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 2);
-        temporaryCtx.lineTo(temporaryCtx.canvas.width / 19 * 18, temporaryCtx.canvas.height / 2);
-        temporaryCtx.stroke();
-    } else if (temporaryCtx.canvas.parentElement.getAttribute("data-type") === "line") {
-        temporaryCtx.lineWidth = 12;
-        temporaryCtx.lineCap = "round";
-        temporaryCtx.fillStyle = "rgba(120, 120, 255, 0.8)";
-
-        temporaryCtx.beginPath();
-        temporaryCtx.arc(temporaryCtx.canvas.width / 7 / 2, temporaryCtx.canvas.height / 3, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
-        temporaryCtx.fill();
-        temporaryCtx.closePath();
-
-        temporaryCtx.beginPath();
-        temporaryCtx.arc(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 7 * 6, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
-        temporaryCtx.fill();
-        temporaryCtx.closePath();
-
-        temporaryCtx.beginPath();
-        temporaryCtx.arc((temporaryCtx.canvas.width / 7 * 6) + (temporaryCtx.canvas.width / 7 / 2), temporaryCtx.canvas.height / 3, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
-        temporaryCtx.fill();
-        temporaryCtx.closePath();
-
-        temporaryCtx.beginPath();
-        temporaryCtx.moveTo(temporaryCtx.canvas.width / 7 / 2, temporaryCtx.canvas.height / 3);
-        temporaryCtx.lineTo(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 7 * 6);
-        temporaryCtx.lineTo((temporaryCtx.canvas.width / 7 * 6) + (temporaryCtx.canvas.width / 7 / 2), temporaryCtx.canvas.height / 3);
-        temporaryCtx.stroke();
-        temporaryCtx.closePath();
-    } else if (temporaryCtx.canvas.parentElement.getAttribute("data-type") === "clear") {
-        const temporaryDrawer = new Drawer(temporaryCtx.canvas);
-        temporaryCtx.lineWidth = 12;
-        temporaryCtx.fillStyle = "crimson";
-        temporaryDrawer.diamond(temporaryCtx.canvas.width / 4, temporaryCtx.canvas.height / 3 * 2, temporaryCtx.canvas.width / 3, temporaryCtx.canvas.height / 3, true);
-        temporaryCtx.fillStyle = "cyan";
-        temporaryDrawer.diamond(temporaryCtx.canvas.width / 4 * 1.66, temporaryCtx.canvas.height / 3 * 1.5, temporaryCtx.canvas.width / 3, temporaryCtx.canvas.height / 3, true);
-    } else if (temporaryCtx.canvas.parentElement.getAttribute("data-type") === "text") {
-        const temporaryDrawer = new Drawer(temporaryCtx.canvas);
-        temporaryDrawer.text("t", temporaryDrawer.canvas.width / 7 * 2, -30, { fontSize: temporaryDrawer.canvas.width, color: document.documentElement.classList.contains("dark-mode") ? "white" : "black" });
+/**
+ * Draw the shape of the buttons that change the current shape to draw.
+*/
+function drawShapeButtonShapes(){
+    for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++) {
+        const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
+        const temporaryDrawer = new Drawer(alternateCtx.canvas);
+        temporaryDrawer.ctx.lineWidth = 1.5;
+        
+        if (document.documentElement.classList.contains("dark-mode")) {
+            temporaryDrawer.ctx.strokeStyle = "white";
+        } else {
+            temporaryDrawer.ctx.strokeStyle = "black";
+        }
+        
+        if (alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon") {
+            alternateCtx.moveTo(0, 0);
+            alternateCtx.lineTo(alternateCtx.canvas.width, 0);
+            alternateCtx.lineTo(alternateCtx.canvas.width, alternateCtx.canvas.height);
+            alternateCtx.lineTo(0, alternateCtx.canvas.height);
+            alternateCtx.lineTo(0, 0);
+            
+            alternateCtx.rect(0, 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+            alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+            alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+            alternateCtx.rect(0, alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
+            
+            alternateCtx.stroke();
+        } else {
+            drawShape(alternateCtx.canvas.parentElement.getAttribute("data-shape"), temporaryDrawer, { lowestPosition: { x: 0, y: 0 }, highestPosition: { x: 16, y: 16 } });
+        }
+        
     }
 }
+
+/**
+ * Append the click event listener to the shape buttons.
+*/
+function appendEventListenerToShapeButtons(){
+    for(let i = 0, dataShapeBtns = document.querySelectorAll("button[data-shape]"); i < dataShapeBtns.length; i++){
+        if (dataShapeBtns[i].getAttribute("data-shape") === "polygon") {
+            dataShapeBtns[i].addEventListener("click", function () {
+                currentDrawingMode = "shape";
+                currentShapeToDraw = dataShapeBtns[i].getAttribute("data-shape");
+                document.querySelectorAll("button.active").forEach((btn) => { btn.classList.remove("active") });
+                this.classList.add("active");
+                hideNewPathButton();
+                hideTextCaracteristics();
+                showPolygonCaracteristics();
+            });
+        } else {
+            dataShapeBtns[i].addEventListener("click", function () {
+                currentDrawingMode = "shape";
+                currentShapeToDraw = dataShapeBtns[i].getAttribute("data-shape");
+                document.querySelectorAll("button.active").forEach((btn) => { btn.classList.remove("active") });
+                this.classList.add("active");
+                hideNewPathButton();
+                hideTextCaracteristics();
+                hidePolygonCaracteristics();
+            });
+        }
+    }
+}
+
+/**
+ * Append the click event listener to the drawing type buttons.
+*/
+function appendEventListenerToDrawingTypeButtons(){
+    for(let i = 0, dataTypeBtns = document.querySelectorAll("button[data-type]"); i < dataTypeBtns.length; i++){
+        if (dataTypeBtns[i].getAttribute("data-type") === "line") {
+            dataTypeBtns[i].addEventListener("click", function () {
+                drawer.ctx.beginPath();
+                currentDrawingMode = this.getAttribute("data-type");
+                hideTextCaracteristics();
+                showNewPathButton();
+                hidePolygonCaracteristics();
+                document.querySelectorAll("button.active").forEach((btn) => { btn.classList.remove("active") });
+                this.classList.add("active");
+            });
+        } else if (dataTypeBtns[i].getAttribute("data-type") === "clear") {
+            dataTypeBtns[i].addEventListener("click", function () {
+                if (ctx.globalCompositeOperation === "source-over") {
+                    ctx.globalCompositeOperation = "destination-out";
+                    this.style.backgroundColor = "orange";
+                } else {
+                    ctx.globalCompositeOperation = "source-over";
+                    this.style.backgroundColor = "";
+                }
+            });
+        } else if (dataTypeBtns[i].getAttribute("data-type") === "text") {
+            dataTypeBtns[i].addEventListener("click", function () {
+                currentDrawingMode = this.getAttribute("data-type");
+                showTextCaracteristics();
+                hideNewPathButton();
+                hidePolygonCaracteristics();
+                document.querySelectorAll("button.active").forEach((btn) => { btn.classList.remove("active") });
+                this.classList.add("active");
+            });
+        } else {
+            dataTypeBtns[i].addEventListener("click", function () {
+                currentDrawingMode = this.getAttribute("data-type");
+                hideTextCaracteristics();
+                hideNewPathButton();
+                hidePolygonCaracteristics();
+                document.querySelectorAll("button.active").forEach((btn) => { btn.classList.remove("active") });
+                this.classList.add("active");
+            });
+        }
+    }
+}
+
+/**
+ * Draw the image of the buttons that change the current drawing type (shape, free, text, etc). 
+*/
+function drawDrawingTypeButtonsImage(){
+    for (let i = 0, dataTypeBtns = document.querySelectorAll("button[data-type]"); i < dataTypeBtns.length; i++) {
+        const temporaryCtx = dataTypeBtns[i].querySelector("canvas").getContext("2d");
+        if (document.documentElement.classList.contains("dark-mode")) {
+            temporaryCtx.strokeStyle = "white";
+        }
+
+        if (dataTypeBtns[i].getAttribute("data-type") === "free") {
+            temporaryCtx.lineWidth = 24;
+            temporaryCtx.lineCap = "round";
+            temporaryCtx.lineJoin = "round";
+            temporaryCtx.moveTo(temporaryCtx.canvas.width / 19, temporaryCtx.canvas.height / 3 * 2);
+            temporaryCtx.lineTo(temporaryCtx.canvas.width / 4, temporaryCtx.canvas.height / 3);
+            temporaryCtx.lineTo(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 2);
+            temporaryCtx.lineTo(temporaryCtx.canvas.width / 19 * 18, temporaryCtx.canvas.height / 2);
+            temporaryCtx.stroke();
+        } else if (dataTypeBtns[i].getAttribute("data-type") === "line") {
+            temporaryCtx.lineWidth = 12;
+            temporaryCtx.lineCap = "round";
+            temporaryCtx.fillStyle = "rgba(120, 120, 255, 0.8)";
+    
+            temporaryCtx.beginPath();
+            temporaryCtx.arc(temporaryCtx.canvas.width / 7 / 2, temporaryCtx.canvas.height / 3, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
+            temporaryCtx.fill();
+            temporaryCtx.closePath();
+    
+            temporaryCtx.beginPath();
+            temporaryCtx.arc(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 7 * 6, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
+            temporaryCtx.fill();
+            temporaryCtx.closePath();
+    
+            temporaryCtx.beginPath();
+            temporaryCtx.arc((temporaryCtx.canvas.width / 7 * 6) + (temporaryCtx.canvas.width / 7 / 2), temporaryCtx.canvas.height / 3, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
+            temporaryCtx.fill();
+            temporaryCtx.closePath();
+    
+            temporaryCtx.beginPath();
+            temporaryCtx.moveTo(temporaryCtx.canvas.width / 7 / 2, temporaryCtx.canvas.height / 3);
+            temporaryCtx.lineTo(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 7 * 6);
+            temporaryCtx.lineTo((temporaryCtx.canvas.width / 7 * 6) + (temporaryCtx.canvas.width / 7 / 2), temporaryCtx.canvas.height / 3);
+            temporaryCtx.stroke();
+            temporaryCtx.closePath();
+        } else if (dataTypeBtns[i].getAttribute("data-type") === "clear") {
+            const temporaryDrawer = new Drawer(temporaryCtx.canvas);
+            temporaryCtx.lineWidth = 12;
+            temporaryCtx.fillStyle = "crimson";
+            temporaryDrawer.diamond(temporaryCtx.canvas.width / 4, temporaryCtx.canvas.height / 3 * 2, temporaryCtx.canvas.width / 3, temporaryCtx.canvas.height / 3, true);
+            temporaryCtx.fillStyle = "cyan";
+            temporaryDrawer.diamond(temporaryCtx.canvas.width / 4 * 1.66, temporaryCtx.canvas.height / 3 * 1.5, temporaryCtx.canvas.width / 3, temporaryCtx.canvas.height / 3, true);
+        } else if (dataTypeBtns[i].getAttribute("data-type") === "text") {
+            const temporaryDrawer = new Drawer(temporaryCtx.canvas);
+            temporaryDrawer.text("t", temporaryDrawer.canvas.width / 7 * 2, -30, { fontSize: temporaryDrawer.canvas.width, color: document.documentElement.classList.contains("dark-mode") ? "white" : "black" });
+        }
+    }
+}
+
 lineWidthInput.addEventListener("input", function () {
     /**
      * if odd and already translated: do nothing.
