@@ -509,7 +509,7 @@ closeCanvasBtn.addEventListener('click', function () {
 
     const saveBtn = document.createElement("button");
     const saveLinkWrraper = document.createElement("a");
-    saveLinkWrraper.href = "/index.html";
+    saveLinkWrraper.href = "./../../../index.html";
     saveLinkWrraper.textContent = "Salvar";
     saveLinkWrraper.addEventListener('click', function () {
         canvas.toBlob((blob) => {
@@ -520,7 +520,7 @@ closeCanvasBtn.addEventListener('click', function () {
 
     const doNotSaveBtn = document.createElement("button");
     const doNotSaveLinkWrraper = document.createElement("a");
-    doNotSaveLinkWrraper.href = "/index.html";
+    doNotSaveLinkWrraper.href = "./../../../index.html";
     doNotSaveLinkWrraper.textContent = "Não salvar";
     doNotSaveBtn.appendChild(doNotSaveLinkWrraper);
 
