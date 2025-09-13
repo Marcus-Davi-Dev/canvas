@@ -1,4 +1,4 @@
-import DuplicateIDError from "./../classes/DuplicateIDError.js";
+import DuplicateIDError from "./../lib/errors/DuplicateIDError.js";
 
 /**
  * @typedef NodeTree A tree of nodes.

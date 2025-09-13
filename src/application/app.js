@@ -1,4 +1,4 @@
-import SharedWorkerPolyfill from "../polyfill/SharedWorkerPolyfill.js";
+import SharedWorkerPolyfill from "./../lib/polyfill/SharedWorkerPolyfill.js";
 
 /** this dialog is a WebComponent (as you see by the "is='input-modal'") and have these
    methods:
@@ -60,7 +60,7 @@ const ASIDE_EXTENDED_WIDTH = "133px";
 // tamanho com o menu de configuração aberto
 const ASIDE_EXTENDED_PLUS_WIDTH = "200px";
 
-const sharedWorker = new SharedWorkerPolyfill("../application/sharedWorker.js");
+const sharedWorker = new SharedWorkerPolyfill("./../services/sharedWorker.js");
 sharedWorker.onerror = (err) => {
     console.log("SharedWorker error:", err);
 };
@@ -300,7 +300,7 @@ function renderDrawing(infos) {
     drawing.classList.add("drawing");
 
     const a = document.createElement("a");
-    a.href = `./public/canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
+    a.href = `/public/canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
     const img = document.createElement("img");
     img.src = URL.createObjectURL(infos.img);
     img.onload = function () {
