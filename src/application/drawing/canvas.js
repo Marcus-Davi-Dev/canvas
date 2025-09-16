@@ -67,7 +67,7 @@ let isPixelSharpnessTranslated = false;
 
 const canvasDrawer = new Drawer(canvas);
 
-const sharedWorker = new SharedWorkerPolyfill("./../../services/sharedWorker.js");
+const sharedWorker = new SharedWorkerPolyfill(new URL("./../../services/sharedWorker.js", import.meta.url));
 
 sharedWorker.port.onmessage = function (ev) {
     const msg = ev.data;
