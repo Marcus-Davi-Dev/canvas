@@ -300,7 +300,7 @@ function renderDrawing(infos) {
     drawing.classList.add("drawing");
 
     const a = document.createElement("a");
-    a.href = `./../../public/canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
+    a.href = `/canvas/public/canvas.html?drawing=${infos.name}&section=${asideSelectedSection}`;
     const img = document.createElement("img");
     img.src = URL.createObjectURL(infos.img);
     img.onload = function () {
