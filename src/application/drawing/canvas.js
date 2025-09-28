@@ -97,6 +97,9 @@ function init() {
     canvasDrawer.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
     canvasDrawer.ctx.strokeStyle = carac.children["drawing-line-color"].value;
     canvasDrawer.ctx.fillStyle = carac.children["drawing-line-color"].value;
+    previewDrawer.ctx.lineWidth = parseInt(carac.children["drawing-line-width"].value);
+    previewDrawer.ctx.strokeStyle = carac.children["drawing-line-color"].value;
+    previewDrawer.ctx.fillStyle = carac.children["drawing-line-color"].value;
     drawShapeButtonShapes();
     appendEventListenerToShapeButtons();
     drawDrawingTypeButtonsImage();
