@@ -29,7 +29,7 @@ import {
     showPolygonCaracteristics,
     hidePolygonCaracteristics
 } from "./../../helpers/drawing/caracteristicsHelpers.js";
-import { 
+import {
     canvas,
     drawingPreview,
     carac,
@@ -171,6 +171,13 @@ function handleMouseOrTouchMove(event) {
                 );
             }
         case "line":
+            previewDrawer.ctx.beginPath();
+            previewDrawer.clear();
+            // highestPosition is the position where the last point/line was drawn.
+            // i think that this variable should be renamed to something more descriptive.
+            previewDrawer.ctx.moveTo(highestPosition.x, highestPosition.y);
+            previewDrawer.ctx.lineTo(getEventPos(event).x, getEventPos(event).y);
+            previewDrawer.ctx.stroke();
         default:
             break; // do nothing
     }
@@ -204,21 +211,30 @@ function handleMouseUpOrTouchEnd(event) {
     highestPosition = getEventPos(event);
 
     if (currentDrawingMode === "shape") {
-        drawShape(currentShapeToDraw, canvasDrawer, { lowestPosition: lowestPosition, highestPosition: highestPosition }, currentShapeToDraw === "polygon" ? { sides: parseInt(document.querySelector("#polygon-sides-input").value) } : undefined);
+        drawShape(
+            currentShapeToDraw,
+            canvasDrawer,
+            {
+                lowestPosition: lowestPosition,
+                highestPosition: highestPosition
+            },
+            currentShapeToDraw === "polygon" ? {
+                sides: parseInt(document.querySelector("#polygon-sides-input").value)
+            } : undefined
+        );
+    }
 
-        drawingPreview.style.display = "none";
-        previewDrawer.clear();
+    if (currentDrawingMode === "text") {
+        drawText(canvasDrawer);
     }
 
     if (currentDrawingMode !== "line") {
         ctx.closePath();
     }
 
-    if (currentDrawingMode === "text") {
+    if (currentDrawingMode !== "free") {
         drawingPreview.style.display = "none";
         previewDrawer.clear();
-
-        drawText(canvasDrawer);
     }
 
     isDrawing = false;
@@ -291,43 +307,43 @@ function drawShape(shape, targetDraw, pos, values = {}) {
 /**
  * Draw the shape of the buttons that change the current shape to draw.
 */
-function drawShapeButtonShapes(){
+function drawShapeButtonShapes() {
     for (let i = 0; i < document.querySelectorAll("button[data-shape]").length; i++) {
         const alternateCtx = document.querySelectorAll("button[data-shape]")[i].children[0].getContext("2d");
         const temporaryDrawer = new Drawer(alternateCtx.canvas);
         temporaryDrawer.ctx.lineWidth = 1.5;
-        
+
         if (document.documentElement.classList.contains("dark-mode")) {
             temporaryDrawer.ctx.strokeStyle = "white";
         } else {
             temporaryDrawer.ctx.strokeStyle = "black";
         }
-        
+
         if (alternateCtx.canvas.parentElement.getAttribute("data-shape") === "polygon") {
             alternateCtx.moveTo(0, 0);
             alternateCtx.lineTo(alternateCtx.canvas.width, 0);
             alternateCtx.lineTo(alternateCtx.canvas.width, alternateCtx.canvas.height);
             alternateCtx.lineTo(0, alternateCtx.canvas.height);
             alternateCtx.lineTo(0, 0);
-            
+
             alternateCtx.rect(0, 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
             alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), 0, alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
             alternateCtx.rect(alternateCtx.canvas.width - (alternateCtx.canvas.width / 8), alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
             alternateCtx.rect(0, alternateCtx.canvas.height - (alternateCtx.canvas.height / 8), alternateCtx.canvas.width / 8, alternateCtx.canvas.height / 8);
-            
+
             alternateCtx.stroke();
         } else {
             drawShape(alternateCtx.canvas.parentElement.getAttribute("data-shape"), temporaryDrawer, { lowestPosition: { x: 0, y: 0 }, highestPosition: { x: 16, y: 16 } });
         }
-        
+
     }
 }
 
 /**
  * Append the click event listener to the shape buttons.
 */
-function appendEventListenerToShapeButtons(){
-    for(let i = 0, dataShapeBtns = document.querySelectorAll("button[data-shape]"); i < dataShapeBtns.length; i++){
+function appendEventListenerToShapeButtons() {
+    for (let i = 0, dataShapeBtns = document.querySelectorAll("button[data-shape]"); i < dataShapeBtns.length; i++) {
         if (dataShapeBtns[i].getAttribute("data-shape") === "polygon") {
             dataShapeBtns[i].addEventListener("click", function () {
                 currentDrawingMode = "shape";
@@ -355,8 +371,8 @@ function appendEventListenerToShapeButtons(){
 /**
  * Append the click event listener to the drawing type buttons.
 */
-function appendEventListenerToDrawingTypeButtons(){
-    for(let i = 0, dataTypeBtns = document.querySelectorAll("button[data-type]"); i < dataTypeBtns.length; i++){
+function appendEventListenerToDrawingTypeButtons() {
+    for (let i = 0, dataTypeBtns = document.querySelectorAll("button[data-type]"); i < dataTypeBtns.length; i++) {
         if (dataTypeBtns[i].getAttribute("data-type") === "line") {
             dataTypeBtns[i].addEventListener("click", function () {
                 canvasDrawer.ctx.beginPath();
@@ -402,7 +418,7 @@ function appendEventListenerToDrawingTypeButtons(){
 /**
  * Draw the image of the buttons that change the current drawing type (shape, free, text, etc). 
 */
-function drawDrawingTypeButtonsImage(){
+function drawDrawingTypeButtonsImage() {
     for (let i = 0, dataTypeBtns = document.querySelectorAll("button[data-type]"); i < dataTypeBtns.length; i++) {
         const temporaryCtx = dataTypeBtns[i].querySelector("canvas").getContext("2d");
         if (document.documentElement.classList.contains("dark-mode")) {
@@ -422,22 +438,22 @@ function drawDrawingTypeButtonsImage(){
             temporaryCtx.lineWidth = 12;
             temporaryCtx.lineCap = "round";
             temporaryCtx.fillStyle = "rgba(120, 120, 255, 0.8)";
-    
+
             temporaryCtx.beginPath();
             temporaryCtx.arc(temporaryCtx.canvas.width / 7 / 2, temporaryCtx.canvas.height / 3, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
             temporaryCtx.fill();
             temporaryCtx.closePath();
-    
+
             temporaryCtx.beginPath();
             temporaryCtx.arc(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 7 * 6, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
             temporaryCtx.fill();
             temporaryCtx.closePath();
-    
+
             temporaryCtx.beginPath();
             temporaryCtx.arc((temporaryCtx.canvas.width / 7 * 6) + (temporaryCtx.canvas.width / 7 / 2), temporaryCtx.canvas.height / 3, temporaryCtx.canvas.width / 7 / 2, 0, 2 * Math.PI);
             temporaryCtx.fill();
             temporaryCtx.closePath();
-    
+
             temporaryCtx.beginPath();
             temporaryCtx.moveTo(temporaryCtx.canvas.width / 7 / 2, temporaryCtx.canvas.height / 3);
             temporaryCtx.lineTo(temporaryCtx.canvas.width / 2, temporaryCtx.canvas.height / 7 * 6);
