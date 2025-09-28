@@ -489,13 +489,13 @@ lineWidthInput.addEventListener("input", function () {
         isPixelSharpnessTranslated = false;
     }
 
-    ctx.lineWidth = lineWidthInput.value;
     canvasDrawer.ctx.lineWidth = lineWidthInput.value;
+    previewDrawer.ctx.lineWidth = lineWidthInput.value;
 })
 
 drawingColorInput.addEventListener("input", function () {
-    ctx.strokeStyle = drawingColorInput.value;
     canvasDrawer.ctx.strokeStyle = drawingColorInput.value;
+    previewDrawer.ctx.strokeStyle = drawingColorInput.value;
 })
 
 resizer.addEventListener("click", function () {
