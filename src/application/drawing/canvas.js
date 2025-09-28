@@ -108,10 +108,16 @@ HTMLElement.prototype.resetStyle = function () {
     this.style = "";
 }
 
-
+// ensure that when the user releases the mouse outside the canvas the preview wont appear again
+document.addEventListener("mouseup", function(ev){
+    if(ev.target !== canvas || ev.target !== drawingPreview){
+        isDrawing = false;
+    }
+});
 canvas.addEventListener("mousemove", handleMouseOrTouchMove);
 canvas.addEventListener("mousedown", handleMouseDownOrTouchStart);
 canvas.addEventListener("mouseup", handleMouseUpOrTouchEnd);
+canvas.addEventListener("mouseleave", handleMouseLeaveOrTouchCancel);
 canvas.addEventListener("touchmove", function (ev) {
     ev.preventDefault();
     handleMouseOrTouchMove(ev);
@@ -125,10 +131,7 @@ canvas.addEventListener("touchend", function (ev) {
     handleMouseUpOrTouchEnd(ev);
 }, { passive: false });
 
-canvas.addEventListener("touchcancel", function (ev) {
-    console.log(ev);
-    console.log("cancel acima ^");
-}, { passive: false });
+canvas.addEventListener("touchcancel", handleMouseLeaveOrTouchCancel, { passive: false });
 
 canvas.addEventListener("click", function (ev) {
     if (currentDrawingMode === "line") {
@@ -248,6 +251,10 @@ function handleMouseUpOrTouchEnd(event) {
     }
 
     isDrawing = false;
+}
+
+function handleMouseLeaveOrTouchCancel(){
+    previewDrawer.clear();
 }
 
 /**
