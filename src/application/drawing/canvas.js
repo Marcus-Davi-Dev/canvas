@@ -155,7 +155,15 @@ function handleMouseOrTouchMove(event) {
             break;
         case "shape":
             previewDrawer.clear();
+
+            previewDrawer.ctx.save();
+            previewDrawer.ctx.lineWidth = 1;
+            previewDrawer.ctx.strokeStyle = "black";
+
             previewDrawer.rectangle(lowestPosition.x, lowestPosition.y, getEventPos(event).x - lowestPosition.x, getEventPos(event).y - lowestPosition.y);
+
+            previewDrawer.ctx.restore();
+
             if (currentShapeToDraw === "polygon") {
                 drawShape(
                     currentShapeToDraw,
@@ -170,6 +178,7 @@ function handleMouseOrTouchMove(event) {
                     { lowestPosition: lowestPosition, highestPosition: getEventPos(event) }
                 );
             }
+            break;
         case "line":
             previewDrawer.ctx.beginPath();
             previewDrawer.clear();
@@ -178,6 +187,7 @@ function handleMouseOrTouchMove(event) {
             previewDrawer.ctx.moveTo(highestPosition.x, highestPosition.y);
             previewDrawer.ctx.lineTo(getEventPos(event).x, getEventPos(event).y);
             previewDrawer.ctx.stroke();
+            break;
         default:
             break; // do nothing
     }
@@ -490,12 +500,16 @@ lineWidthInput.addEventListener("input", function () {
     }
 
     canvasDrawer.ctx.lineWidth = lineWidthInput.value;
+    canvasDrawer.ctx.beginPath();
     previewDrawer.ctx.lineWidth = lineWidthInput.value;
+    previewDrawer.ctx.beginPath();
 })
 
 drawingColorInput.addEventListener("input", function () {
     canvasDrawer.ctx.strokeStyle = drawingColorInput.value;
+    canvasDrawer.ctx.beginPath();
     previewDrawer.ctx.strokeStyle = drawingColorInput.value;
+    previewDrawer.ctx.beginPath();
 })
 
 resizer.addEventListener("click", function () {
